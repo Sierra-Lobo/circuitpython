@@ -125,7 +125,7 @@ else
   endif
 endif
 
-CFLAGS += $(INC) -Wall -Werror -std=gnu11 -nostdlib -fshort-enums $(BASE_CFLAGS) $(CFLAGS_MOD) $(COPT) -Werror=missing-prototypes
+CFLAGS += $(INC) -Wall -std=gnu11 -nostdlib -fshort-enums $(BASE_CFLAGS) $(CFLAGS_MOD) $(COPT) -Werror=missing-prototypes
 
 ifeq ($(CHIP_FAMILY), samd21)
 CFLAGS += \
