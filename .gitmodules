@@ -367,10 +367,6 @@
 [submodule "frozen/Adafruit_CircuitPython_MMC56x3"]
 	path = frozen/Adafruit_CircuitPython_MMC56x3
 	url = git@github.com:Sierra-Lobo/Adafruit_CircuitPython_MMC56x3
-[submodule "frozen/mtdb"]
-	path = frozen/SierraLobo_MTDB
-	url = git@github.com:Sierra-Lobo/mtdb.git
-	#url = git@github.com:Sierra-Lobo/mtdb-circuitpython
 [submodule "frozen/pycubed_rfm9x"]
 	path = frozen/pycubed_rfm9x
 	url = git@github.com:Sierra-Lobo/library_pycubed_rfm9x.py
