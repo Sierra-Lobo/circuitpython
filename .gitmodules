@@ -370,3 +370,12 @@
 [submodule "frozen/pycubed_rfm9x"]
 	path = frozen/pycubed_rfm9x
 	url = git@github.com:Sierra-Lobo/library_pycubed_rfm9x.py
+[submodule "frozen/SierraLobo_MTDB"]
+	path = frozen/SierraLobo_MTDB
+	url = git@github.com:Sierra-Lobo/mtdb.git
+[submodule "frozen/tasko"]
+	path = frozen/tasko
+	url = git@github.com:Sierra-Lobo/tasko.git
+[submodule "frozen/sierralobo_rockblock"]
+	path = frozen/sierralobo_rockblock
+	url = git@github.com:Sierra-Lobo/sierralobo_rockblock.git
