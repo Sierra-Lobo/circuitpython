@@ -7,7 +7,9 @@
  *
  * Copyright (c) 2019-2020 Zoltán Vörös
 */
-    
+//#include "test.h"
+
+
 #include <stdio.h>
 #include <sys/types.h>
 #include "py/runtime.h"
@@ -161,7 +163,7 @@ STATIC mp_obj_t adcsSoh_make_new(const mp_obj_type_t *type, size_t n_args, size_
 	self->quat = getNumpyArray(arg_vals[4].u_obj);
 	self->adcstime = getFloat(arg_vals[5].u_obj);
 	self->timestamp = getFloat(arg_vals[6].u_obj);	
-
+	//self->timestamp = foo();
 	return MP_OBJ_FROM_PTR(self);
 }
 

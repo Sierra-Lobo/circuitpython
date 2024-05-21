@@ -4,12 +4,15 @@
 #include "py/binary.h"
 #include "py/objarray.h"
 #include "extmod/ulab/code/ndarray.h"
+#include "vector.h"
+int extrapsh(double);
+int shval3(double, double, double, int, VEC*);
 //mp_obj_t array_append(mp_obj_t self_in, mp_obj_t arg);
 //mp_obj_t create_new_myclass(uint16_t a, uint16_t b);
-ndarray_obj_t* getNumpyArray(const mp_obj_t);
+//static ndarray_obj_t* getNumpyArray(const mp_obj_t);
 
 
-STATIC mp_obj_array_t *array_new(char typecode, size_t n);/* {
+/*STATIC mp_obj_array_t *array_new(char typecode, size_t n); {
     if (typecode == 'x') {
         mp_raise_ValueError(MP_ERROR_TEXT("bad typecode"));
     }

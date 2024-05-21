@@ -1,4 +1,4 @@
-
+#include "Igrf.h"
 #include<stdio.h>
 /****************************************************************************/
 /*                                                                          */
@@ -53,8 +53,8 @@
 #define MAXCOEFF (MAXDEG*(MAXDEG+2))
 double mag_coeff[MAXCOEFF];                   //Computed coefficients
 //#include "igrfCoeffs.h"
-int extrapsh(double date);
-int shval3(double flat, double flon, double elev, int nnmax, VEC* dest);
+//int extrapsh(double date);
+//int shval3(double flat, double flon, double elev, int nnmax, VEC* dest);
 
 const int igrf_date=2010;
 const int igrf_ord=13;
