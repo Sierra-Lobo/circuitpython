@@ -122,10 +122,10 @@ bool usqlite_lookup(mp_obj_t obj, qstr attr, mp_obj_t *dest) {
         return true;
     }
 	if (type->locals_dict != NULL) {
-    //if (MP_OBJ_TYPE_HAS_SLOT(type, locals_dict)) {
+    //if (MP_OBJ_TYPE_HAS_SLOT(type, type->locals_dict)) {
         // generic method lookup
         // this is a lookup in the object (ie not class or type)
-        assert(MP_OBJ_TYPE_GET_SLOT(type, locals_dict)->base.type == &mp_type_dict); // MicroPython restriction, for now
+        //assert(MP_OBJ_TYPE_GET_SLOT(type, locals_dict)->base.type == &mp_type_dict); // MicroPython restriction, for now
        	mp_map_t* locals_map = &type->locals_dict->map; 
 		//mp_map_t* locals_map = &MP_OBJ_TYPE_GET_SLOT(type, locals_dict)->map;
         mp_map_elem_t* elem = mp_map_lookup(locals_map, MP_OBJ_NEW_QSTR(attr), MP_MAP_LOOKUP);

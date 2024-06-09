@@ -61,7 +61,7 @@ void common_hal_bleio_characteristic_buffer_construct(bleio_characteristic_buffe
     bleio_characteristic_set_observer(characteristic, self);
 }
 
-uint32_t common_hal_bleio_characteristic_buffer_read(bleio_characteristic_buffer_obj_t *self, uint8_t *data, size_t len, int *errcode) {
+uint32_t common_hal_bleio_characteristic_buffer_read(bleio_characteristic_buffer_obj_t *self, uint8_t *data, size_t len, int *errcode, int offset) {
     uint64_t start_ticks = supervisor_ticks_ms64();
 
     // Wait for all bytes received or timeout

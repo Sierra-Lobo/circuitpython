@@ -68,6 +68,14 @@ extern "C" {
 ** SQLITE_SYSAPI macros are used only when building for environments
 ** that require non-default calling conventions.
 */
+#ifndef SQLITE_PRIVATE
+# define SQLITE_PRIVATE static
+#endif
+typedef struct Parse Parse;
+typedef struct Token Token;
+typedef struct Index Index;
+typedef struct sqlite3 sqlite3;
+SQLITE_PRIVATE int sqlite3AnalysisLoad(sqlite3*,int iDB);
 #ifndef SQLITE_EXTERN
 # define SQLITE_EXTERN extern
 #endif

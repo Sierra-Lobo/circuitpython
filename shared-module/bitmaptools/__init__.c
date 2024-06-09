@@ -599,7 +599,7 @@ void common_hal_bitmaptools_readinto(displayio_bitmap_t *self, mp_obj_t *file, i
 
 
         int error = 0;
-        mp_uint_t bytes_read = file_proto->read(file, rowdata32, rowsize, &error);
+        mp_uint_t bytes_read = file_proto->read(file, rowdata32, rowsize, &error, 0);
         if (error) {
             mp_raise_OSError(error);
         }

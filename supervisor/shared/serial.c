@@ -218,7 +218,7 @@ char serial_read(void) {
     if (common_hal_busio_uart_rx_characters_available(&console_uart)) {
         int uart_errcode;
         char text;
-        common_hal_busio_uart_read(&console_uart, (uint8_t *)&text, 1, &uart_errcode);
+        common_hal_busio_uart_read(&console_uart, (uint8_t *)&text, 1, &uart_errcode, 0);
         return text;
     }
     #endif

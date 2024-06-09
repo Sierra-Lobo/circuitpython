@@ -173,7 +173,7 @@ endif
 # Remove -Wno-stringop-overflow after we can test with CI's GCC 10. Mac's looks weird.
 DISABLE_WARNINGS = -Wno-stringop-overflow -Wno-cast-align
 
-CFLAGS += $(INC) -Wall -Werror -std=gnu11 -nostdlib -fshort-enums $(BASE_CFLAGS) $(CFLAGS_MOD) $(COPT) $(DISABLE_WARNINGS) -Werror=missing-prototypes
+CFLAGS += $(INC) -Wall -std=gnu11 -nostdlib -fshort-enums $(BASE_CFLAGS) $(CFLAGS_MOD) $(COPT) $(DISABLE_WARNINGS) -Werror=missing-prototypes
 
 CFLAGS += \
 	-march=armv6-m \
@@ -235,7 +235,7 @@ SRC_SDK := \
 	$(SRC_SDK_CYW43) \
 
 SRC_SDK := $(addprefix sdk/, $(SRC_SDK))
-$(patsubst %.c,$(BUILD)/%.o,$(SRC_SDK) $(SRC_CYW43)): CFLAGS += -Wno-missing-prototypes -Wno-undef -Wno-unused-function -Wno-nested-externs -Wno-strict-prototypes -Wno-double-promotion -Wno-sign-compare -Wno-unused-variable -Wno-strict-overflow -Ilib/cyw43-driver
+$(patsubst %.c,$(BUILD)/%.o,$(SRC_SDK) $(SRC_CYW43)): CFLAGS += -Wno-missing-prototypes -Wno-unused-function -Wno-nested-externs -Wno-strict-prototypes -Wno-double-promotion -Wno-sign-compare -Wno-unused-variable -Wno-strict-overflow -Ilib/cyw43-driver
 
 SRC_C += \
 	boards/$(BOARD)/board.c \

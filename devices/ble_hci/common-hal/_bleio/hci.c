@@ -310,7 +310,7 @@ hci_result_t hci_poll_for_incoming_pkt(void) {
         // Read just one character a a time, so we don't accidentally get part of a second
         // packet.
         size_t num_read =
-            common_hal_busio_uart_read(common_hal_bleio_adapter_obj.hci_uart, rx_buffer + rx_idx, 1, &errcode);
+            common_hal_busio_uart_read(common_hal_bleio_adapter_obj.hci_uart, rx_buffer + rx_idx, 1, &errcode, 0);
         if (num_read == 0) {
             return HCI_OK;
         }

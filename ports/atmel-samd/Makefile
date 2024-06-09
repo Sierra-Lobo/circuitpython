@@ -367,10 +367,26 @@ ifeq ($(VALID_BOARD),)
 $(BUILD)/firmware.elf: invalid-board
 else
 #CC = arm-none-eabi-g++
-$(BUILD)/firmware.elf: $(OBJ) $(GENERATED_LD_FILE)
+
+SHARED_SQLITE = libsqlite3.so
+
+$(SHARED_SQLITE): sqlite3.c
+	$(Q)$(CC) -c -o sqlite3.o sqlite3.c -I../../exampltes/usercmodule/sqlite $(LDFLAGS)  -Wl,--print-memory-usage -Wl,--start-group $(LIBS) -Wl,--end-group
+	$(Q)$(CC) -shared -o libsqlite3.so sqlite3.o
+
+
+libsqlite3.a: sqlite3.c
+	$(Q)$(CC) -Os -ffunction-sections -fdata-sections -fno-unwind-tables -fno-asynchronous-unwind-tables -flto -c -o  sqlite3.o sqlite3.c -I../../exampltes/usercmodule/sqlite $(LDFLAGS)  -Wl,--print-memory-usage -Wl,--start-group $(LIBS) -Wl,--end-group -Wl, -s -Wl, -Bsymbolic 
+	#arm-none-eabi-gcc-ar rcs libsqlite3.so sqlite3.o 
+	$(Q)$(CC)-ar rcs libsqlite3.a sqlite3.o 
+
+
+LIBS += -L. -lsqlite3
+
+$(BUILD)/firmware.elf: $(OBJ) $(GENERATED_LD_FILE) libsqlite3.a
 	$(STEPECHO) "LINK $@ $(CC)"
 	$(Q)echo $(OBJ) > $(BUILD)/firmware.objs
-	$(Q)$(CC) -o $@ $(LDFLAGS) @$(BUILD)/firmware.objs -Wl,--print-memory-usage -Wl,--start-group $(LIBS) -Wl,--end-group
+	$(Q)$(CC) -o $@ $(LDFLAGS) @$(BUILD)/firmware.objs -Wl,--print-memory-usage -Wl,--start-group $(LIBS) -Wl,--end-group  -L. -lsqlite3
 	$(Q)$(SIZE) $@ | $(PYTHON) $(TOP)/tools/build_memory_info.py $(GENERATED_LD_FILE) $(BUILD)
 endif
 

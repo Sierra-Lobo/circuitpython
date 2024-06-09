@@ -237,7 +237,7 @@ size_t common_hal_busio_uart_write(busio_uart_obj_t *self, const uint8_t *data, 
 }
 
 // Read characters.
-size_t common_hal_busio_uart_read(busio_uart_obj_t *self, uint8_t *data, size_t len, int *errcode) {
+size_t common_hal_busio_uart_read(busio_uart_obj_t *self, uint8_t *data, size_t len, int *errcode, int offset) {
     if (self->rx_pin == NO_PIN) {
         mp_raise_ValueError(translate("No RX pin"));
     }

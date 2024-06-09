@@ -47,7 +47,8 @@ SOFTWARE.
 
 // ------------------------------------------------------------------------------
 
-#include "sqlite3.c"
+//#include "sqlite3.c"
+#include "sqlite3.h"
 
 // ------------------------------------------------------------------------------
 
@@ -55,9 +56,12 @@ SOFTWARE.
 #pragma GCC diagnostic ignored "-Wreturn-type"
 #endif
 
+#ifdef SQLITE_OMIT_ANALYZE 
+#undef SQLITE_OMIT_ANALYZE
+#endif
 #ifdef SQLITE_OMIT_ANALYZE
-SQLITE_PRIVATE void sqlite3Analyze(Parse *pParse, Token *pName1, Token *pName2) {
-}
+//SQLITE_PRIVATE void sqlite3Analyze(Parse *pParse, Token *pName1, Token *pName2) {
+//}
 
 #if __GNUC__
 SQLITE_PRIVATE int sqlite3AnalysisLoad(sqlite3 *db, int iDB) {

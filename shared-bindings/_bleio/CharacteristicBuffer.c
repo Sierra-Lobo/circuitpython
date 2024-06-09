@@ -113,7 +113,7 @@ STATIC void check_for_deinit(bleio_characteristic_buffer_obj_t *self) {
 //|         ...
 
 // These three methods are used by the shared stream methods.
-STATIC mp_uint_t bleio_characteristic_buffer_read(mp_obj_t self_in, void *buf_in, mp_uint_t size, int *errcode) {
+STATIC mp_uint_t bleio_characteristic_buffer_read(mp_obj_t self_in, void *buf_in, mp_uint_t size, int *errcode, int offset) {
     bleio_characteristic_buffer_obj_t *self = MP_OBJ_TO_PTR(self_in);
     check_for_deinit(self);
     raise_error_if_not_connected(self);
@@ -124,7 +124,7 @@ STATIC mp_uint_t bleio_characteristic_buffer_read(mp_obj_t self_in, void *buf_in
         return 0;
     }
 
-    return common_hal_bleio_characteristic_buffer_read(self, buf, size, errcode);
+    return common_hal_bleio_characteristic_buffer_read(self, buf, size, errcode,0);
 }
 
 STATIC mp_uint_t bleio_characteristic_buffer_write(mp_obj_t self_in, const void *buf_in, mp_uint_t size, int *errcode) {

@@ -13,12 +13,7 @@ LONGINT_IMPL = MPZ
 CIRCUITPY__EVE =1 
 CIRCUITPY_SYNTHIO = 0
 
-CIRCUITPY_ULAB = 1
-CIRCUITPY_BINASCII = 1
 CIRCUITPY_SDCARDIO = 1
-CIRCUITPY_JSON = 1
-CIRCUITPY_MSGPACK = 1
-CIRCUITPY_ALARM = 1
 
 # Not needed
 CIRCUITPY_AUDIOBUSIO = 0
@@ -30,14 +25,7 @@ CIRCUITPY_PS2IO = 0
 CIRCUITPY_BLEIO_HCI=0
 CIRCUITPY_BLEIO=0
 #FROZEN_MPY_DIRS += $(TOP)/frozen/frozen_test
-FROZEN_MPY_DIRS += $(TOP)/frozen/adcs
 #FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_LSM6DS
-FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_Register
-FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_NeoPixel
-FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_GPS
-FROZEN_MPY_DIRS += $(TOP)/frozen/pycubed_rfm9x
-FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_RockBlock 
-
 
 
 

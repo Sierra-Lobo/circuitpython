@@ -14,11 +14,11 @@ target_sources(usermod_sqlite INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/usqlite.c
 )
 
-if(IDF_TARGET MATCHES "^esp32")
-    target_compile_options(usermod_sqlite INTERFACE
-        -mtext-section-literals
-    )
-endif()
+#if(IDF_TARGET MATCHES "^esp32^")
+#    target_compile_options(usermod_sqlite INTERFACE
+#        -mtext-section-literals
+#    )
+#endif()
 
 
 # Add the current directory as an include directory.

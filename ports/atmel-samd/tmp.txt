@@ -1,0 +1,38 @@
+Use make V=1, make V=2 or set BUILD_VERBOSE similarly in your environment to increase build verbosity.
+Including User C Module from ../../examples/usercmodule/cexample
+Including User C Module from ../../examples/usercmodule/sqlite
+mkdir -p build-sierra_lobo_pycubed/genhdr
+FREEZE ../../frozen/Adafruit_CircuitPython_NeoPixel ../../frozen/Adafruit_CircuitPython_Register ../../frozen/adcs ../../frozen/Adafruit_CircuitPython_GPS ../../frozen/pycubed_rfm9x ../../frozen/Adafruit_CircuitPython_RockBlock
+MKMANIFEST ../../frozen/Adafruit_CircuitPython_NeoPixel ../../frozen/Adafruit_CircuitPython_Register ../../frozen/adcs ../../frozen/Adafruit_CircuitPython_GPS ../../frozen/pycubed_rfm9x ../../frozen/Adafruit_CircuitPython_RockBlock
+(cd build-sierra_lobo_pycubed/frozen_mpy && find * -name \*.py -exec printf 'freeze_as_mpy("frozen_mpy", "%s")\n' {} \; )> build-sierra_lobo_pycubed/manifest.py.tmp && mv -f build-sierra_lobo_pycubed/manifest.py.tmp build-sierra_lobo_pycubed/manifest.py
+GEN build-sierra_lobo_pycubed/genhdr/moduledefs.h
+QSTR updated
+MPY adafruit_gps.py
+MPY adafruit_register/i2c_struct_array.py
+MPY adafruit_register/i2c_struct.py
+MPY adafruit_register/i2c_bcd_alarm.py
+MPY adafruit_register/i2c_bit.py
+MPY adafruit_register/__init__.py
+MPY adafruit_register/i2c_bits.py
+MPY adafruit_register/i2c_bcd_datetime.py
+MPY adafruit_rockblock.py
+MPY adcs/Ekf.py
+MPY adcs/Utilities.py
+MPY adcs/Adcs.py
+MPY adcs/Control.py
+MPY neopixel.py
+MPY pycubed_rfm9x.py
+GEN build-sierra_lobo_pycubed/frozen_content.c
+Memory region         Used Size  Region Size  %age Used
+FLASH_BOOTLOADER:          0 GB        16 KB      0.00%
+  FLASH_FIRMWARE:      750908 B      1000 KB     73.33%
+FLASH_FILESYSTEM:          0 GB         0 GB
+    FLASH_CONFIG:          0 GB         0 GB
+       FLASH_NVM:          0 GB         8 KB      0.00%
+             RAM:       37992 B       256 KB     14.49%
+
+757100 bytes used, 266900 bytes free in flash firmware space out of 1024000 bytes (1000.0kB).
+37992 bytes used, 224152 bytes free in ram for stack and heap out of 262144 bytes (256.0kB).
+
+Converted to uf2, output size: 1514496, start address: 0x4000
+Wrote 1514496 bytes to build-sierra_lobo_pycubed/firmware.uf2

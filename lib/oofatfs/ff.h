@@ -29,7 +29,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#define FFCONF_H "lib/oofatfs/ffconf.h"
 #include FFCONF_H       /* FatFs configuration options */
 
 #if FF_DEFINED != FFCONF_DEF
