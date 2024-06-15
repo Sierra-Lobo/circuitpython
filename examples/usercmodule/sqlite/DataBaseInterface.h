@@ -2,24 +2,25 @@
 #include "stdint.h"
 #include "usqlite.h"
 #include "usqlite_mem.h"
+#include "usqlite_cursor.h"
+
+#define SOH_SIZE 512
+#define MAX_CMD 512
+
+#ifndef DATABASE_INTERFACE_H
+#define DATABASE_INTERFACE_H
 
 
+/**
+ * @brief Initialize all tables in the database
+ *
+ * @param self usqlite connection object
+ *
+ * @return status
+ */
+status initializeDatabase(usqlite_connection_t* self);
 
-typedef struct internal {
-	sqlite3* db;
-	char* dbName;
-	bool active;
-	char* tables;
-} internal;
 
-internal __internal_db;
-
-typedef enum status {
-	ERROR = -1,
-	SUCCESS,
-	ROW_NOT_FOUND, //entry in database not found
-
-} status;
 
 
 
@@ -31,7 +32,17 @@ typedef enum status {
  *
  * @return status
  */
-int executeRaw(usqlite_connection_t* self, char* raw);
+int executeStr(usqlite_cursor_t* self, const char* raw);
+
+
+/**
+ * @brief execute raw sql stmt
+ *
+ * @param self: usqlite connection object with database info
+ *
+ * @return status
+ */
+int executeStmtNoReturn(usqlite_cursor_t* self); 
 
 
 /**
@@ -58,7 +69,7 @@ int insertSoh(usqlite_connection_t* self, uint8_t sohEnum, uint8_t* data, size_t
  *
  * @return status
  */
-int fetchSoh(usqlite_connection_t* self, uint8_t sohEnum, uint32_t index, uint8_t* data, size_t& len);
+int fetchSoh(usqlite_connection_t* self, uint8_t sohEnum, uint32_t index, uint8_t* data, size_t* len);
 
 
 /**
@@ -72,7 +83,7 @@ int fetchSoh(usqlite_connection_t* self, uint8_t sohEnum, uint32_t index, uint8_
  *
  * @return status
  */
-int fetchSoh(usqlite_connection_t* self, uint8_t sohEnum, double timestamp, uint8_t* data, size_t& len);
+int fetchSohTimestamp(usqlite_connection_t* self, uint8_t sohEnum, uint32_t timeStart, uint32_t timeEnd, uint8_t* data, size_t* len);
 
 
 /**
@@ -86,7 +97,7 @@ int fetchSoh(usqlite_connection_t* self, uint8_t sohEnum, double timestamp, uint
  *
  * @return status
  */
-int logEvent(usqlite_connection_t* self, uint8_t level, const char* msg, double timestamp, double uptime );
+int logEvent(usqlite_connection_t* self, uint8_t level, const char* msg, size_t n, uint32_t timestamp, double uptime );
 
 
 /**
@@ -98,13 +109,12 @@ int logEvent(usqlite_connection_t* self, uint8_t level, const char* msg, double 
  * @param self: usqlite connection object with database info
  * @param cmdID: ID of the command in the cdh cmd dispatch
  * @param dueTime: unix timestamp in UTC of when the command should execute.
- * @param offset: number of seconds after receiving command to execute.
  * @param args: arguments to the command
  * @param len: length of the arguments
  *
  * @return status
  */
-int insertCommand(usqlite_connection_t* self, uint8_t cmdID, double dueTime, double offset, uint8_t* args, size_t len );
+int insertCommand(usqlite_connection_t* self, uint8_t cmdID, double dueTime, uint8_t* args, size_t len );
 
 
 /**
@@ -119,7 +129,7 @@ int insertCommand(usqlite_connection_t* self, uint8_t cmdID, double dueTime, dou
  *
  * @return status
  */
-int getNextCommand(usqlite_connection_t* self, uint8_t& cmdID, uint8_t* args, size_t len, uint32_t& index);
+int getNextCommand(usqlite_connection_t* self, uint8_t* cmdID, uint8_t* args, size_t* len, uint32_t* index);
 
 
 /**
@@ -144,7 +154,7 @@ int deleteCommand(usqlite_connection_t* self, uint32_t index);
  *
  * @return status
  */
-int insertPayloadData(usqlite_connection_t* self, uint8_t* data, size_t len,  double pos[3], double timestamp );
+int insertPayloadData(usqlite_connection_t* self, uint8_t* data, size_t len,  double pos[3], uint32_t timestamp );
 
 
 /**
@@ -159,7 +169,7 @@ int insertPayloadData(usqlite_connection_t* self, uint8_t* data, size_t len,  do
  *
  * @return status
  */
-int fetchPayloadDataID(usqlite_connection_t* self, uint32_t index, uint8_t* data, size_t& len, double pos[3], double& timestamp);
+int fetchPayloadDataID(usqlite_connection_t* self, uint32_t index, uint8_t* data, size_t* len, double pos[3], uint32_t* timestamp);
 
 
 /**
@@ -174,7 +184,7 @@ int fetchPayloadDataID(usqlite_connection_t* self, uint32_t index, uint8_t* data
  *
  * @return status
  */
-int fetchPayloadDataTime(usqlite_connection_t* self, uint32_t& index, uint8_t* data, size_t& len, double pos[3], double& timestamp);
+int fetchPayloadDataTime(usqlite_connection_t* self, uint32_t* index, uint8_t* data, size_t* len, double pos[3], uint32_t* timestamp);
 
 
 /**
@@ -189,7 +199,7 @@ int fetchPayloadDataTime(usqlite_connection_t* self, uint32_t& index, uint8_t* d
  *
  * @return status
  */
-int fetchPayloadDataPos(usqlite_connection_t* self, uint32_t& index, uint8_t* data,size_t& len,  double pos[3], double& timestamp);
+int fetchPayloadDataPos(usqlite_connection_t* self, uint32_t* index, uint8_t* data,size_t* len,  double pos[3], double* timestamp);
 
 
 /**
@@ -226,6 +236,21 @@ int deletePayloadDataPos(usqlite_connection_t* self, double pos[3]);
 
 
 /**
+ * @brief Create empty uplink in database
+ *
+ * @param self usqlite connection object
+ * @param txID: id of the transmission
+ * @param txSize: total size of transmission in bytes
+ * @param numPackets: number of packets in bytes
+ * @param missing: missing packet bitset
+ * @param missingSize: size of missing packet bitset
+ *
+ * @return status
+ */
+int createUplink(usqlite_connection_t* self, uint32_t txID, uint32_t txSize, uint32_t numPackets, uint8_t* missing, uint32_t missingSize);
+
+
+/**
  * @brief Insert uplink into database
  *
  * @param self: usqlite connection object with database info
@@ -234,7 +259,7 @@ int deletePayloadDataPos(usqlite_connection_t* self, double pos[3]);
  *
  * @return status
  */
-int insertUplink(usqlite_connection_t* self, uint8_t* data, size_t len);
+int insertUplinkPacket(usqlite_connection_t* self,uint32_t txID, uint32_t packetID,  uint8_t* data, size_t len);
 
 
 /**
@@ -271,7 +296,7 @@ int createDownlink(usqlite_connection_t* self, uint32_t downlinkID, uint8_t* dat
  *
  * @return status
  */
-int fetchDownlink(usqlite_connection_t* self, uint32_t downlinkID, uint8_t* data, size_t& len);
+int fetchDownlink(usqlite_connection_t* self, uint32_t downlinkID, uint8_t* data, size_t* len);
 
 
 /**
@@ -283,7 +308,7 @@ int fetchDownlink(usqlite_connection_t* self, uint32_t downlinkID, uint8_t* data
  *
  * @return status
  */
-int fetchNextDownlink(usqlite_connection_t* self,  uint8_t* data, size_t& len);
+int fetchNextDownlink(usqlite_connection_t* self,  uint8_t* data, size_t* len);
 
 
 /**
@@ -308,7 +333,7 @@ int deleteDownlink(usqlite_connection_t* self, uint32_t downlinkID);
  *
  * @return status
  */
-int fetchDownlinkPacket(usqlite_connection_t* self, uint32_t packetID,uint32_t downlinkID, uint8_t* data, size_t& len);
+int fetchDownlinkPacket(usqlite_connection_t* self, uint32_t packetID,uint32_t downlinkID, uint8_t* data, size_t* len);
 
 
 /**
@@ -325,3 +350,6 @@ int clearTable(usqlite_connection_t* self, char* tableName);
 
 
 
+int getMissingPacketIds(usqlite_connection_t* self, uint32_t txID, uint8_t* packetIDs, size_t* len);
+
+#endif //DATABASE_INTERFACE_H

@@ -53,7 +53,7 @@ STATIC mp_obj_t usqlite_cursor_make_new(const mp_obj_type_t *type, size_t n_args
     self->arraysize = 1;
 
     usqlite_connection_register(self->connection, self_obj);
-
+	
     switch (self->connection->row_type)
     {
         case MP_QSTR_row:
@@ -87,7 +87,7 @@ STATIC mp_obj_t usqlite_cursor_make_new(const mp_obj_type_t *type, size_t n_args
 
         return usqlite_cursor_execute(nxargs, xargs);
     }
-
+	
     return self_obj;
 }
 
@@ -123,7 +123,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(usqlite_cursor_close_obj, usqlite_cursor_close);
 
 // ------------------------------------------------------------------------------
 
-STATIC int stepExecute(usqlite_cursor_t *self) {
+int stepExecute(usqlite_cursor_t *self) {
     self->rc = sqlite3_step(self->stmt);
 
     switch (self->rc)

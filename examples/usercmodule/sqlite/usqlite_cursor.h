@@ -27,9 +27,8 @@ SOFTWARE.
 
 #include "py/runtime.h"
 #include "py/obj.h"
-
+#include "stdint.h"
 #include "usqlite_connection.h"
-
 // ------------------------------------------------------------------------------
 
 struct _usqlite_cursor_t;
@@ -46,7 +45,7 @@ struct _usqlite_cursor_t
     int rowcount;
     usqlite_rowfactory_t rowfactory;
     int arraysize;
-};
+} ;
 
 // ------------------------------------------------------------------------------
 
@@ -54,6 +53,7 @@ extern const mp_obj_type_t usqlite_cursor_type;
 
 mp_obj_t usqlite_cursor_close(mp_obj_t self_in);
 
+int stepExecute(usqlite_cursor_t *self); 
 // ------------------------------------------------------------------------------
 
 #endif

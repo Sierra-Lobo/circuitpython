@@ -12,6 +12,9 @@ target_sources(usermod_sqlite INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/usqlite_vfs.c
     ${CMAKE_CURRENT_LIST_DIR}/usqlite_utils.c
     ${CMAKE_CURRENT_LIST_DIR}/usqlite.c
+	${CMAKE_CURRENT_LIST_DIR}/DataBaseInterface.c
+	${CMAKE_CURRENT_LIST_DIR}/CircuitPythonDataBaseInterface.c
+	${CMAKE_CURRENT_LIST_DIR}/databaseUtils.c
 )
 
 #if(IDF_TARGET MATCHES "^esp32^")

@@ -12,7 +12,7 @@
    * @author Owen DelBene
    * 6/8/2024
    */
-  const  char* create_config =
+  static const  char* create_config =
       "CREATE TABLE configs("
       "id INTEGER PRIMARY KEY,"
       "value BLOB NOT NULL);";
@@ -23,7 +23,7 @@
    * @author Owen DelBene
    * 6/8/2024
    */
-  const  char* create_commands =
+  static const  char* create_commands =
       "CREATE TABLE commands("
       "dbid INTEGER PRIMARY KEY AUTOINCREMENT,"
       "time INTEGER NOT NULL,"
@@ -41,9 +41,10 @@
    * @author Owen DelBene
    * 6/8/2024
    */
-  const  char* create_soh =
+  static const  char* create_soh =
       "CREATE TABLE soh("
-      "time INTEGER PRIMARY KEY,"
+	  "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+      "time INTEGER,"
       "data BLOB NOT NULL);";
 
 
@@ -53,7 +54,7 @@
    * @author Owen DelBene
    * @date 6/8/2024
    */
-  const  char* create_downlinks =
+  static const  char* create_downlinks =
       "CREATE TABLE downlinks("
       "dbid INTEGER PRIMARY KEY AUTOINCREMENT,"
       "priority INTEGER NOT NULL,"
@@ -68,7 +69,7 @@
    * @date 6/8/2024
 
    */
-  const  char* create_uplinks =
+  static const  char* create_uplinks =
       "CREATE TABLE uplinks("
       "dbid INTEGER PRIMARY KEY,"
       "numPckts INTEGER NOT NULL,"
@@ -81,14 +82,26 @@
    * @author Owen DelBene
    * @date 6/8/2024
    */
-  const  char* create_events =
+  static const  char* create_events =
       "CREATE TABLE events("
-      "dbid INTEGER PRIMARY KEY AUTOINCREMENT,"
+      "id INTEGER PRIMARY KEY AUTOINCREMENT,"
       "severity INTEGER NOT NULL,"
-      "subsystem TEXT NOT NULL,"
-      "time BLOB NOT NULL,"
-      "info TEXT NOT NULL,"
-      "payload BLOB);";
+      "time INTEGER ,"
+      "uptime INTEGER NOT NULL,"
+      "info TEXT NOT NULL);";
+  
+  /**
+   * @brief Create the commands table
+   *
+   * @author Owen DelBene
+   * 6/8/2024
+   */
+  static const  char* create_payload =
+      "CREATE TABLE payload("
+      "dbid INTEGER PRIMARY KEY AUTOINCREMENT,"
+      "time INTEGER ,"
+      "pos BLOB ,"
+      "data BLOB NOT NULL );";
 
 
   /*
@@ -110,7 +123,7 @@
    * @returns The ID, time, command ID, and parameters of the next command to be
    * run
    */
-  const  char* query_command =
+  static const  char* query_command =
       "SELECT MIN(dbid), time, cid, params FROM commands WHERE "
       "time=(SELECT MIN(time) FROM commands);";
 
@@ -123,7 +136,7 @@
    * @param ?1 The id of the configuration variable to fetch
    * @return Return the ID requested and the value of the parameter as a blob
    */
-  const  char* query_config =
+  static const  char* query_config =
       "SELECT id, value FROM configs WHERE id=?1;";
 
   /**
@@ -132,7 +145,7 @@
    * @author Owen DelBene
    * @date 6/8/2024
    */
-  const  char* query_all_config =
+  static const  char* query_all_config =
       "SELECT id, value FROM configs;";
 
   /**
@@ -146,9 +159,50 @@
    * @return The time and SOH data for all SOHs occurring at or after the given
    * time
    */
-  const  char* query_soh =
+  static const  char* query_soh_time =
       "SELECT time, data FROM soh WHERE time >= ?1 AND time <= ?2;";
+  
+  /**
+   * @brief Query all SOH data newer than a given time
+   *
+   * @author Owen DelBene
+   * 6/8/2024
+   *
+   * @param ?1 The UNIX timestamp to fetch
+   *
+   * @return The time and SOH data for all SOHs occurring at or after the given
+   * time
+   */
+  static const  char* query_soh_index =
+      "SELECT time, data FROM soh WHERE id =?1;";
 
+  /**
+   * @brief Query all payload data newer than a given time
+   *
+   * @author Owen DelBene
+   * 6/8/2024
+   *
+   * @param ?1 The UNIX timestamp to fetch
+   *
+   * @return The time and SOH data for all SOHs occurring at or after the given
+   * time
+   */
+  static const  char* query_payload_time =
+      "SELECT time, data, pos FROM soh WHERE time >= ?1 AND time <= ?2;";
+  
+  /**
+   * @brief Query all payload data by index
+   *
+   * @author Owen DelBene
+   * 6/8/2024
+   *
+   * @param ?1 The index to fetch
+   *
+   * @return The time and payload data for given indexn
+   *
+   */
+  static const  char* query_payload_index=
+      "SELECT time, data, pos FROM payload WHERE dbid =?1;";
   /**
    * @brief Query last given number of SOH structs
    *
@@ -159,7 +213,7 @@
    *
    * @returns A queryset of SOH rows.
    */
-  const  char* query_soh_num =
+  static const  char* query_soh_num =
       "SELECT time, data FROM soh ORDER BY time DESC LIMIT ?1;";
 
   /**
@@ -172,11 +226,11 @@
    *
    * @return The next data to be downlinked
    */
-  const  char* query_downlink =
+  static const  char* query_downlink =
       "SELECT MIN(dbid), data FROM downlinks "
       "WHERE priority = (SELECT MAX(priority) FROM downlinks);";
 
-  const  char* query_downlink_id =
+  static const  char* query_downlink_id =
       "SELECT MIN(dbid) FROM downlinks "
       "WHERE priority = (SELECT MAX(priority) FROM downlinks) AND "
       "AllBitsSet(npackets, sent) = 0;";
@@ -189,10 +243,10 @@
    *
    * @param ?1 The transmission ID of the uplink
    */
-  const  char* query_missing_uplink =
+  static const  char* query_missing_uplink =
       "SELECT numPckts, missing FROM uplinks WHERE rowid = ?1;";
 
-  const  char* query_resend_requests =
+  static const  char* query_resend_requests =
       "SELECT dbid FROM uplinks WHERE AllBitsUnset(numPckts, missing) = 0;";
 
   /**
@@ -203,7 +257,7 @@
    *
    * @param ?1 The transmission ID of the uplink
    */
-  const  char* query_uplink_data =
+  static const  char* query_uplink_data =
       "SELECT data FROM uplinks WHERE rowid = ?1;";
 
 
@@ -217,7 +271,7 @@
    *
    * @returns an integer number of bytes, rounded to the page size of OS.
    */
-  const  char* query_table_size =
+  static const  char* query_table_size =
       " SELECT SUM(pgsize) FROM dbstat WHERE name LIKE ?1;";
 
   /*
@@ -236,7 +290,20 @@
    * @param ?2 The ID of the command
    * @param ?3 Any params for the command
    */
-  const  char* insert_command =
+  static const  char* insert_payload =
+      "INSERT INTO commands(time, cid, params) VALUES(?1, ?2, ?3);";
+  
+  /**
+   * @brief Insert  payload data into the database
+   *
+   * @author Owen DelBene
+   * 6/8/2024
+   *
+   * @param ?1 The time the experiment took place
+   * @param ?2 The gps position the experiment took place 
+   * @param ?3 The raw payload data
+   */
+  static const  char* insert_command =
       "INSERT INTO commands(time, cid, params) VALUES(?1, ?2, ?3);";
 
   /**
@@ -248,7 +315,7 @@
    * @param ?1 The ID of the config parameter
    * @param ?2 The new value of the parameter
    */
-  const  char* upsert_config =
+  static const  char* upsert_config =
       "REPLACE INTO configs VALUES(?1, ?2);";
 
   /**
@@ -260,7 +327,7 @@
    * @param ?1 The UNIX timestamp of the datum
    * @param ?2 The SOH Data blob
    */
-  const  char* insert_soh =
+  static const  char* insert_soh =
       "INSERT INTO soh(time, data) VALUES(?1, ?2);";
 
 
@@ -273,14 +340,14 @@
    * @param ?1 The downlink's raw byte vector
    * @param ?2 The downlink's priority
    */
-  const  char* insert_downlink =
+  static const  char* insert_downlink =
       "INSERT INTO downlinks(data, priority, sent, npackets) VALUES(?1, ?2, "
       "zeroblob(?3), ?4) returning dbid;";
 
-  const  char* get_downlink_sent =
+  static const  char* get_downlink_sent =
       "SELECT npackets, sent FROM downlinks WHERE dbid = ?1;";
 
-  const  char* set_downlink_sent =
+  static const  char* set_downlink_sent =
       "UPDATE downlinks SET sent = ?1 WHERE dbid = ?2;";
 
 
@@ -295,7 +362,7 @@
    * @param ?3 The "missing packets" bitset
    * @param ?4 The number of packets in the uplink
    */
-  const  char* insert_uplink =
+  static const  char* insert_uplink =
       "INSERT INTO uplinks VALUES(?1, ?4, zeroblob(?2), ?3);";
 
   /**
@@ -305,13 +372,11 @@
    * @date 6/8/2024
    *
    * @param ?1 The severity of the event
-   * @param ?2 The subsystem owning this event
-   * @param ?3 The timestamp blob
-   * @param ?4 The provided human readable information
-   * @param ?5 The payload of the event (ex: local variables, etc.)
+   * @param ?2 The timestamp blob
+   * @param ?3 The provided human readable information
    */
-  const  char* insert_event =
-      "INSERT INTO events(severity, subsystem, time, info, payload) VALUES(?1, ?2, ?3, ?4, ?5);";
+  static const  char* insert_event =
+      "INSERT INTO events(severity,  time, uptime, info) VALUES(?1, ?2, ?3, ?4);";
 
 
   /**
@@ -323,7 +388,7 @@
    * @param ?1 The new missing byte vector
    * @param ?2 The transmission ID of the uplink
    */
-  const  char* update_missing_uplink =
+  static const  char* update_missing_uplink =
       "UPDATE uplinks SET missing = ?1 WHERE rowid = ?2;";
 
   /*
@@ -343,12 +408,35 @@
    *
    * @returns The ID, time, command ID, and parameters of the deleted command
    */
-  const  char* delete_command =
+  static const  char* pop_last_command =
       "DELETE FROM commands WHERE "
       "dbid = (SELECT MIN(dbid) FROM commands WHERE "
       "time = (SELECT MIN(time) FROM commands)) "
       "RETURNING dbid, time, cid, params;";
+  
+  /**
+   * @brief Delete command from the database given index 
+   *
+   *
+   * @author Owen DelBene
+   * 6/8/2024
+   *
+   * @param ?1 The index of the command to delete.
+   */
+  static const  char* delete_command =
+      "DELETE FROM COMMANDS WHERE dbid = ?1;";
 
+  /**
+   * @brief Delete payload from the database given index 
+   *
+   *
+   * @author Owen DelBene
+   * 6/8/2024
+   *
+   * @param ?1 The index of the payload entry to delete.
+   */
+  static const  char* delete_payload =
+      "DELETE FROM PAYLOAD WHERE dbid = ?1;";
   /**
    * @brief Delete all SOH data older than the given timestamp
    *
@@ -359,7 +447,7 @@
    *
    * @param ?1 The UNIX timestamp of the newest SOH to delete.
    */
-  const  char* delete_soh =
+  static const  char* delete_soh =
       "DELETE FROM soh WHERE time <= ?2 AND time >= ?1;";
 
   /**
@@ -371,17 +459,38 @@
    *
    * @returns The data for the downlink that was deleted
    */
-  const  char* delete_downlink =
+  static const  char* delete_downlink =
       "DELETE FROM downlinks WHERE "
       "dbid = (SELECT MIN(dbid) FROM downlinks WHERE "
       "priority=(SELECT MAX(priority) FROM downlinks)"
       ") "
       "RETURNING dbid, data;";
 
-  const  char* delete_downlink_id =
+  static const  char* delete_downlink_id =
       "DELETE FROM downlinks WHERE "
       "dbid = ?1;";
 
-  const  char* delete_all_downlinks =
-      "DELETE FROM downlinks;";
+  /**
+   * @brief Delete the oldest uplink (the one most recently uplinked) and
+   * return it
+   *
+   * @author Owen DelBene
+   * 6/8/2024
+   *
+   * @returns The data for the uplink that was deleted
+   */
+  static const  char* delete_uplink =
+      "DELETE FROM uplinks WHERE "
+      "dbid = (SELECT MIN(dbid) FROM uplinkss WHERE "
+      "priority=(SELECT MAX(priority) FROM uplinks)"
+      ") "
+      "RETURNING dbid, data;";
+
+  static const  char* delete_uplink_id =
+      "DELETE FROM uplinks WHERE "
+      "dbid = ?1;";
+
+
+  static const  char* delete_all_uplinks =
+      "DELETE FROM uplinks;";
 

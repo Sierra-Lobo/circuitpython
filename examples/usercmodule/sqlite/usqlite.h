@@ -36,6 +36,33 @@ SOFTWARE.
 #include "usqlite_file.h"
 
 #include <string.h>
+typedef enum status {
+	INPUT_ERROR = -2,
+	DB_ERROR = -1,
+	SUCCESS,
+	ROW_NOT_FOUND, //entry in database not found
+
+} status;
+
+typedef enum tables {
+	CONFIG,
+	COMMANDS,
+	SOH,
+	DOWNLINKS,
+	UPLINKS,
+	EVENTS,
+	PAYLOAD,
+	NUM_TABLES
+} tables;
+
+typedef enum SOH_TYPE {
+	ALL,
+	ADCS,
+	GPS,
+	TEMP,
+	POWER,
+	COM
+} SOH_TYPE;
 
 #define _STRINGIFY(x) #x
 #define STRINGIFY(x) _STRINGIFY(x)

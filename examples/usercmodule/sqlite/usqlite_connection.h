@@ -27,8 +27,10 @@ SOFTWARE.
 
 #include "py/runtime.h"
 #include "py/obj.h"
-
+#include "stdint.h"
 // ------------------------------------------------------------------------------
+
+
 
 typedef struct _usqlite_connection_t
 {
@@ -38,6 +40,8 @@ typedef struct _usqlite_connection_t
     mp_obj_t row_factory;
     mp_obj_list_t cursors;
     mp_obj_t trace_callback;
+	uint32_t tables;
+	bool active;
 }
 usqlite_connection_t;
 
