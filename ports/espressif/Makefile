@@ -450,7 +450,17 @@ endif
 esp-idf-stamp: $(BUILD)/esp-idf/config/sdkconfig.h
 	$(Q)ninja -C $(BUILD)/esp-idf $(IDF_CMAKE_TARGETS)
 
-$(BUILD)/firmware.elf: $(OBJ) | esp-idf-stamp
+
+libsqlite3.a: sqlite3.c
+	$(Q)$(CC) -Os -ffunction-sections -fdata-sections -fno-unwind-tables -fno-asynchronous-unwind-tables -flto -c -o  sqlite3.o sqlite3.c -I../../exampltes/usercmodule/sqlite $(LDFLAGS)  -Wl,--print-memory-usage -Wl,--start-group $(LIBS) -Wl,--end-group -Wl, -s -Wl, -Bsymbolic 
+	#arm-none-eabi-gcc-ar rcs libsqlite3.so sqlite3.o 
+	$(Q)$(CC)-ar rcs libsqlite3.a sqlite3.o 
+
+LIBS += -L. -lsqlite3
+
+
+
+$(BUILD)/firmware.elf: $(OBJ) | esp-idf-stamp libsqlite3.a
 	$(STEPECHO) "LINK $@"
 	$(Q)$(CC) -o $@ $(LDFLAGS) $^ -Wl,--start-group $(ESP_IDF_COMPONENTS_EXPANDED) $(BINARY_BLOBS) $(MBEDTLS_COMPONENTS_LINK_EXPANDED) $(BUILD)/esp-idf/esp-idf/newlib/libnewlib.a  -Wl,--end-group -u newlib_include_pthread_impl -u ld_include_highint_hdl -Wl,--start-group $(LIBS) -Wl,--end-group $(BUILD)/esp-idf/esp-idf/pthread/libpthread.a  -u __cxx_fatal_exception
 
@@ -468,6 +478,8 @@ endif
 
 UF2_FAMILY_ID_esp32s2 = 0xbfdd4eee
 UF2_FAMILY_ID_esp32s3 = 0xc47e5767
+
+
 
 $(BUILD)/firmware.uf2: $(BUILD)/circuitpython-firmware.bin
 	$(STEPECHO) "Create $@"
