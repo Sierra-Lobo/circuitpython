@@ -451,18 +451,13 @@ esp-idf-stamp: $(BUILD)/esp-idf/config/sdkconfig.h
 	$(Q)ninja -C $(BUILD)/esp-idf $(IDF_CMAKE_TARGETS)
 
 
-libsqlite3.a: sqlite3.c
-	$(Q)$(CC) -Os -ffunction-sections -fdata-sections -fno-unwind-tables -fno-asynchronous-unwind-tables -flto -c -o  sqlite3.o sqlite3.c -I../../exampltes/usercmodule/sqlite $(LDFLAGS)  -Wl,--print-memory-usage -Wl,--start-group $(LIBS) -Wl,--end-group -Wl, -s -Wl, -Bsymbolic 
-	#arm-none-eabi-gcc-ar rcs libsqlite3.so sqlite3.o 
-	$(Q)$(CC)-ar rcs libsqlite3.a sqlite3.o 
-
-LIBS += -L. -lsqlite3
 
 
 
-$(BUILD)/firmware.elf: $(OBJ) | esp-idf-stamp libsqlite3.a
+
+$(BUILD)/firmware.elf: $(OBJ) | esp-idf-stamp 
 	$(STEPECHO) "LINK $@"
-	$(Q)$(CC) -o $@ $(LDFLAGS) $^ -Wl,--start-group $(ESP_IDF_COMPONENTS_EXPANDED) $(BINARY_BLOBS) $(MBEDTLS_COMPONENTS_LINK_EXPANDED) $(BUILD)/esp-idf/esp-idf/newlib/libnewlib.a  -Wl,--end-group -u newlib_include_pthread_impl -u ld_include_highint_hdl -Wl,--start-group $(LIBS) -Wl,--end-group $(BUILD)/esp-idf/esp-idf/pthread/libpthread.a  -u __cxx_fatal_exception
+	$(Q)$(CC) -o $@ -lm $(LDFLAGS) -lm  $^ -Wl,--start-group $(ESP_IDF_COMPONENTS_EXPANDED) $(BINARY_BLOBS) $(MBEDTLS_COMPONENTS_LINK_EXPANDED) $(BUILD)/esp-idf/esp-idf/newlib/libnewlib.a  -Wl,--end-group -u newlib_include_pthread_impl -u ld_include_highint_hdl -Wl,--start-group $(LIBS) -Wl,--end-group $(BUILD)/esp-idf/esp-idf/pthread/libpthread.a  -u __cxx_fatal_exception -lm
 
 $(BUILD)/circuitpython-firmware.bin: $(BUILD)/firmware.elf | tools/build_memory_info.py
 	$(STEPECHO) "Create $@"
@@ -473,7 +468,7 @@ ifeq ($(VALID_BOARD),)
 $(BUILD)/firmware.bin: invalid-board
 else
 $(BUILD)/firmware.bin: $(BUILD)/circuitpython-firmware.bin | esp-idf-stamp
-	$(Q)$(PYTHON) ../../tools/join_bins.py $@ $(BOOTLOADER_OFFSET) $(BUILD)/esp-idf/bootloader/bootloader.bin $(PARTITION_TABLE_OFFSET) $(BUILD)/esp-idf/partition_table/partition-table.bin $(FIRMWARE_OFFSET) $(BUILD)/circuitpython-firmware.bin
+	$(Q)$(PYTHON) ../../tools/join_bins.py $@ $(BOOTLOADER_OFFSET) $(BUILD)/esp-idf/bootloader/bootloader.bin $(PARTITION_TABLE_OFFSET) $(BUILD)/esp-idf/partition_table/partition-table.bin $(FIRMWARE_OFFSET) $(BUILD)/circuitpython-firmware.bin 
 endif
 
 UF2_FAMILY_ID_esp32s2 = 0xbfdd4eee
