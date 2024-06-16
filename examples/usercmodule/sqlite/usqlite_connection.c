@@ -30,13 +30,13 @@ SOFTWARE.
 //database interface funcs
 mp_obj_t usqlite_insertSoh(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_initializeDatabase(mp_obj_t self_in);
-mp_obj_t usqlite_fetchSoh(size_t n_args, const mp_obj_t* args);
+mp_obj_t usqlite_fetchSoh(size_t n_args,size_t n_kw, const mp_obj_t* args);
 mp_obj_t usqlite_logEvent(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_insertCommand(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_getNextCommand(mp_obj_t self_in);
 mp_obj_t usqlite_deleteCommand(mp_obj_t self_in, mp_obj_t index);
 mp_obj_t usqlite_insertPayloadData(size_t n_args, const mp_obj_t* args);
-mp_obj_t usqlite_fetchPayloadDataID(mp_obj_t self_in, mp_obj_t index);
+mp_obj_t usqlite_fetchPayloadData(size_t n_args,size_t n_kw, const mp_obj_t* args);
 mp_obj_t usqlite_deletePayloadDataID(mp_obj_t self_in, mp_obj_t index);
 mp_obj_t usqlite_createUplink(size_t n_args, const mp_obj_t* args);
 
@@ -50,7 +50,7 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_insertCommand_obj, 3, 3 ,usqlite_ins
 MP_DEFINE_CONST_FUN_OBJ_1(usqlite_getNextCommand_obj, usqlite_getNextCommand);
 MP_DEFINE_CONST_FUN_OBJ_2(usqlite_deleteCommand_obj, usqlite_deleteCommand);
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_insertPayloadData_obj, 3, 3 ,usqlite_insertPayloadData);
-MP_DEFINE_CONST_FUN_OBJ_2(usqlite_fetchPayloadDataID_obj, usqlite_fetchPayloadDataID);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_fetchPayloadData_obj,2, 3,  usqlite_fetchPayloadData);
 MP_DEFINE_CONST_FUN_OBJ_2(usqlite_deletePayloadDataID_obj, usqlite_deletePayloadDataID);
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_createUplink_obj, 5, 5 ,usqlite_createUplink);
 
@@ -306,7 +306,7 @@ STATIC const mp_rom_map_elem_t usqlite_connection_locals_dict_table[] =
 	{ MP_ROM_QSTR(MP_QSTR_getNextCommand),  MP_ROM_PTR(&usqlite_getNextCommand_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_deleteCommand),  MP_ROM_PTR(&usqlite_deleteCommand_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_insertPayloadData),  MP_ROM_PTR(&usqlite_insertPayloadData_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_fetchPayloadDataID),  MP_ROM_PTR(&usqlite_fetchPayloadDataID_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_fetchPayloadData),  MP_ROM_PTR(&usqlite_fetchPayloadData_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_deletePayloadDataID),  MP_ROM_PTR(&usqlite_deletePayloadDataID_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_createUplink),  MP_ROM_PTR(&usqlite_createUplink_obj) },
 };

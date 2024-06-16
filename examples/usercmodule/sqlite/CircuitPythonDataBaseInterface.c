@@ -3,13 +3,13 @@
 
 mp_obj_t usqlite_insertSoh(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_initializeDatabase(mp_obj_t self_in);
-mp_obj_t usqlite_fetchSoh(size_t n_args, const mp_obj_t* args);
+mp_obj_t usqlite_fetchSoh(size_t n_args,size_t n_kw, const mp_obj_t* args);
 mp_obj_t usqlite_logEvent(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_insertCommand(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_getNextCommand(mp_obj_t self_in);
 mp_obj_t usqlite_deleteCommand(mp_obj_t self_in, mp_obj_t index);
 mp_obj_t usqlite_insertPayloadData(size_t n_args, const mp_obj_t* args);
-mp_obj_t usqlite_fetchPayloadDataID(mp_obj_t self_in, mp_obj_t index);
+mp_obj_t usqlite_fetchPayloadData(size_t n_args,size_t n_kw, const mp_obj_t* args);
 mp_obj_t usqlite_deletePayloadDataID(mp_obj_t self_in, mp_obj_t index);
 mp_obj_t usqlite_createUplink(size_t n_args, const mp_obj_t* args);
 
@@ -39,19 +39,40 @@ mp_obj_t usqlite_initializeDatabase(mp_obj_t self_in)
 	return mp_obj_new_int(res);
 
 }
-
-//check if can use keyword args to specify either timestamp or index
-mp_obj_t usqlite_fetchSoh(size_t n_args, const mp_obj_t* args)
+//handle negative indices
+mp_obj_t usqlite_fetchSoh(size_t n_args,size_t n_kw, const mp_obj_t* args)
 {
+	
+	enum {ARG_self, ARG_soh, ARG_index, ARG_startTime, ARG_endTime, NUM_ARGS};
+	static const mp_arg_t allowed_args[] = {
+		{MP_QSTR_self, MP_ARG_OBJ, {.u_obj = mp_const_none}},
+		{MP_QSTR_sohEnum, MP_ARG_INT, {.u_int = 0}},
+		{MP_QSTR_index, MP_ARG_INT, {.u_int = 0}},
+		{MP_QSTR_start_time, MP_ARG_INT, {.u_int = 0}},
+		{MP_QSTR_end_time, MP_ARG_INT, {.u_int = 0}},
+	};
+	
+	mp_arg_val_t arg_vals[MP_ARRAY_SIZE(allowed_args)];
+	mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, arg_vals);
+	
+	
 	usqlite_connection_t* self = MP_OBJ_TO_PTR(args[0]);
-	uint8_t sohEnum = mp_obj_get_int(args[1]);
-	uint32_t index = mp_obj_get_int(args[2]);
+	uint8_t sohEnum = arg_vals[ARG_soh].u_int;
+	uint32_t index = arg_vals[ARG_index].u_int;
+	uint32_t timeStart = arg_vals[ARG_startTime].u_int;
+	uint32_t timeStop  = arg_vals[ARG_endTime].u_int;
+
+
 	uint8_t* data;
 	size_t len;
-	int ret = fetchSoh(self, sohEnum, index, data, &len);
 	
+	if ((timeStart == 0) && (timeStop == 0)) {
+		int ret = fetchSoh(self, sohEnum, index, data, &len);
+	}
+	else {
+		int ret = fetchSohTimestamp(self, sohEnum, timeStart, timeStop, data, &len);
+	}
 	return mp_obj_new_bytearray(len, data);
-	
 }
 
 mp_obj_t usqlite_logEvent(size_t n_args, const mp_obj_t* args)
@@ -125,22 +146,50 @@ mp_obj_t usqlite_insertPayloadData(size_t n_args, const mp_obj_t* args)
 
 
 //TODO same as soh, keword args to specify ID or timestamp
-mp_obj_t usqlite_fetchPayloadDataID(mp_obj_t self_in, mp_obj_t index)
+mp_obj_t usqlite_fetchPayloadData(size_t n_args,size_t n_kw, const mp_obj_t* args)
 {
-	usqlite_connection_t* self = MP_OBJ_TO_PTR(self_in);
-	uint32_t id = mp_obj_get_int(index);
+	
+	enum {ARG_self, ARG_index, ARG_pos, ARG_startTime, ARG_endTime, NUM_ARGS};
+	static const mp_arg_t allowed_args[] = {
+		{MP_QSTR_self, MP_ARG_OBJ, {.u_obj = mp_const_none}},
+		{MP_QSTR_index, MP_ARG_INT, {.u_int = 0}},
+		{MP_QSTR_pos, MP_ARG_OBJ, {.u_obj = mp_const_none}},
+		{MP_QSTR_start_time, MP_ARG_INT, {.u_int = 0}},
+		{MP_QSTR_end_time, MP_ARG_INT, {.u_int = 0}},
+	};
+	
+	mp_arg_val_t arg_vals[MP_ARRAY_SIZE(allowed_args)];
+	mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, arg_vals);
+	
+	
+	usqlite_connection_t* self = MP_OBJ_TO_PTR(args[0]);
+	uint32_t index = arg_vals[ARG_index].u_int;
+	double pos[3];
+	uint32_t timeStart = arg_vals[ARG_startTime].u_int;
+	uint32_t timeStop  = arg_vals[ARG_endTime].u_int;
+	
+	
 
 	uint8_t* buf;
 	size_t len = 0;
-	double pos[3];
-	uint32_t timestamp;
 	
-	int ret = fetchPayloadDataID(self, id, buf, &len, pos, &timestamp);
+	if ((timeStart !=0) && (timeStop !=0 )) {
+		int ret = fetchPayloadDataTime(self, &index, buf, &len, pos, &timeStart, &timeStop);
+	}
+	else if (arg_vals[ARG_pos].u_obj != mp_const_none) {
+		int ret = fetchPayloadDataPos(self, &index, buf, &len, pos, &timeStart);
+	}
+	else {
+		int ret = fetchPayloadDataID(self, index, buf, &len, pos, &timeStart);
+	}
+
+
 	mp_obj_t data = mp_obj_new_bytearray(len, buf);
-	mp_obj_t t = mp_obj_new_int(timestamp);
+	mp_obj_t t1 = mp_obj_new_int(timeStart);
+	mp_obj_t t2 = mp_obj_new_int(timeStop);
 	mp_obj_t r = mp_obj_new_bytearray(3 * sizeof(double), pos);
-	mp_obj_t list[3] = {t, r, data};
-	return mp_obj_new_list(3, list);
+	mp_obj_t list[3] = {t1,t2, r, data};
+	return mp_obj_new_list(4, list);
 
 }
 

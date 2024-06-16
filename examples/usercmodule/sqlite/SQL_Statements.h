@@ -203,6 +203,20 @@
    */
   static const  char* query_payload_index=
       "SELECT time, data, pos FROM payload WHERE dbid =?1;";
+  
+  /**
+   * @brief Query all payload data by index
+   *
+   * @author Owen DelBene
+   * 6/8/2024
+   *
+   * @param ?1 The position to search for 
+   *
+   * @return The time and payload data for given indexn
+   *
+   */
+  static const  char* query_payload_pos=
+      "SELECT time, data, pos FROM payload WHERE pos =?1;";
   /**
    * @brief Query last given number of SOH structs
    *
@@ -451,7 +465,7 @@
       "DELETE FROM soh WHERE time <= ?2 AND time >= ?1;";
 
   /**
-   * @brief Delete the oldest downlink (the one most recently downlinked) and
+   * @brief Delete the oldest downlink (the one least recently downlinked) and
    * return it
    *
    * @author Owen DelBene
@@ -471,7 +485,7 @@
       "dbid = ?1;";
 
   /**
-   * @brief Delete the oldest uplink (the one most recently uplinked) and
+   * @brief Delete the oldest uplink (the one least recently uplinked) and
    * return it
    *
    * @author Owen DelBene

@@ -180,11 +180,12 @@ int fetchPayloadDataID(usqlite_connection_t* self, uint32_t index, uint8_t* data
  * @param data: output paylaod bytes
  * @param len: output number of payload bytes
  * @param pos[3]: output position of the payload
- * @param timestamp: timestamp to search for, returns timestamp found
+ * @param timestamp: timestamp to search for (start bound inclusive), returns timestamp found
+ * @param timeStop: timestamp to search for (end bound inclusive), returns timestamp found
  *
  * @return status
  */
-int fetchPayloadDataTime(usqlite_connection_t* self, uint32_t* index, uint8_t* data, size_t* len, double pos[3], uint32_t* timestamp);
+int fetchPayloadDataTime(usqlite_connection_t* self, uint32_t* index, uint8_t* data, size_t* len, double pos[3], uint32_t* timestamp, uint32_t* timeStop);
 
 
 /**

@@ -115,7 +115,7 @@ int executeStr(usqlite_cursor_t* self, const char* sql) {
 int executeStmtNoReturn(usqlite_cursor_t* self) {
     self->rowcount = 0;
 
-	while (! self->rc == SQLITE_DONE) {
+	while (! (self->rc == SQLITE_DONE)) {
     stepExecute(self);
 
     switch (self->rc)
@@ -242,19 +242,37 @@ int fetchPayloadDataID(usqlite_connection_t* self, uint32_t index, uint8_t* data
 	return SUCCESS; //?
 }
 
-int fetchPayloadDataTime(usqlite_connection_t* self, uint32_t* index, uint8_t* data,size_t* len,  double pos[3], uint32_t* timestamp) {
+int fetchPayloadDataTime(usqlite_connection_t* self, uint32_t* index, uint8_t* data,size_t* len,  double pos[3], uint32_t* timeStart, uint32_t* timeStop) {
 
 	usqlite_cursor_t cursor;
-	createStatement(self, &cursor, query_soh_time);
-	sqlite3_bind_int64(cursor.stmt, 0, timestamp);
+	createStatement(self, &cursor, query_payload_time);
+	sqlite3_bind_int64(cursor.stmt, 0, *timeStart);
+	sqlite3_bind_int64(cursor.stmt, 0, *timeStop);
 	stepExecute(&cursor);
-	*timestamp = sqlite3_column_int64(cursor.stmt, 0);
+	*timeStart= sqlite3_column_int64(cursor.stmt, 0);
 	getBlob(&cursor, 1, &data, len);
 	size_t poslen;	
 	getBlob(&cursor, 2, &pos, &poslen);	
 	return SUCCESS; //?
 	
 }
+
+
+int fetchPayloadDataPos(usqlite_connection_t* self, uint32_t* index, uint8_t* data,size_t* len,  double pos[3], double* timestamp) {
+	
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, query_payload_pos);
+	sqlite3_bind_int64(cursor.stmt, 0, *timestamp);
+	stepExecute(&cursor);
+	*timestamp= sqlite3_column_int64(cursor.stmt, 0);
+	getBlob(&cursor, 1, &data, len);
+	size_t poslen;	
+	getBlob(&cursor, 2, &pos, &poslen);	
+	return SUCCESS; //?
+
+
+}
+
 
 
 int deletePayloadDataID(usqlite_connection_t* self, uint32_t index) {
