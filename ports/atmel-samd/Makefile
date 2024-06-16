@@ -383,7 +383,7 @@ libsqlite3.a: sqlite3.c
 
 LIBS += -L. -lsqlite3
 
-$(BUILD)/firmware.elf: $(OBJ) $(GENERATED_LD_FILE) libsqlite3.a
+$(BUILD)/firmware.elf: $(OBJ) $(GENERATED_LD_FILE) 
 	$(STEPECHO) "LINK $@ $(CC)"
 	$(Q)echo $(OBJ) > $(BUILD)/firmware.objs
 	$(Q)$(CC) -o $@ $(LDFLAGS) @$(BUILD)/firmware.objs -Wl,--print-memory-usage -Wl,--start-group $(LIBS) -Wl,--end-group  -L. -lsqlite3
