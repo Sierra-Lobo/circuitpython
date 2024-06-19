@@ -27,8 +27,10 @@ SOFTWARE.
 #include "py/stream.h"
 #include "py/reader.h"
 
-#include "string.h"
 
+
+#include "string.h"
+#include "stdio.h"
 #include "usqlite.h"
 #include "usqlite_mem.h"
 
@@ -101,16 +103,21 @@ STATIC mp_obj_t usqlite_connect(mp_obj_t filename) {
     initialize();
 
     const char *pFilename = mp_obj_str_get_str(filename);
+	
 
-    if (!pFilename || !strlen(pFilename)) {
-        mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Empty filename"));
+
+
+	if (!pFilename || !strlen(pFilename) ) {
+        mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Empty filename2!!!!"));
         return mp_const_none;
     }
 
+	printf("connection filename %s\n", pFilename);
     usqlite_logprintf(___FUNC___ " filename: '%s'\n", pFilename);
 
     sqlite3 *db = NULL;
     int rc = sqlite3_open(pFilename, &db);
+	printf("sqlite3 open error code %d\n", rc);
     if (rc) {
         mp_raise_msg_varg(&usqlite_Error, MP_ERROR_TEXT("error %d:%s opening '%s'"), rc, sqlite3_errstr(rc), pFilename);
         return mp_const_none;
@@ -123,11 +130,8 @@ STATIC mp_obj_t usqlite_connect(mp_obj_t filename) {
         MP_OBJ_FROM_PTR(db)
     };
 
-    #if defined(MP_OBJ_TYPE_GET_SLOT)
-    return MP_OBJ_TYPE_GET_SLOT(&usqlite_connection_type, make_new)(NULL, 1, 0, args);
-    #else
+	printf("creating connection type\n");
     return usqlite_connection_type.make_new(NULL, 1, 0, args);
-    #endif
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(usqlite_connect_obj, usqlite_connect);

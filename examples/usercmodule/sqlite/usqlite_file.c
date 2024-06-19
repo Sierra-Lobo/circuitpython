@@ -30,14 +30,41 @@ SOFTWARE.
 #include "py/stream.h"
 #include "py/builtin.h"
 
+
+
+#include "stdio.h"
+#include <fcntl.h>
+
+#include "py/runtime.h"
+#include "py/objstr.h"
+#include "py/mperrno.h"
+#include "extmod/vfs.h"
+
+
+#if MICROPY_VFS_FAT
+#include "extmod/vfs_fat.h"
+#endif
+
+#if MICROPY_VFS_LFS1 || MICROPY_VFS_LFS2
+#include "extmod/vfs_lfs.h"
+#endif
+
+#if defined(MICROPY_VFS_POSIX) && MICROPY_VFS_POSIX
+#include "extmod/vfs_posix.h"
+#endif
+
+
+
+
 extern const mp_obj_module_t mp_module_io;
 
 // ------------------------------------------------------------------------------
 
 bool usqlite_file_exists(const char *pathname) {
-    mp_obj_t os = mp_module_get_loaded_or_builtin(MP_QSTR_uos);
-    mp_obj_t ilistdir = usqlite_method(os, MP_QSTR_ilistdir);
-
+	/*
+    mp_obj_t os = mp_module_get_loaded_or_builtin(MP_QSTR_os);
+    mp_obj_t ilistdir = usqlite_method(os, MP_QSTR_listdir);
+	*/
     char path[MAXPATHNAME + 1];
     strcpy(path, pathname);
     const char *filename = pathname;
@@ -56,10 +83,12 @@ bool usqlite_file_exists(const char *pathname) {
             path[1] = 0;
         }
     }
-
+	
     bool exists = false;
-    mp_obj_t listdir = mp_call_function_1(ilistdir, mp_obj_new_str(path, strlen(path)));
-    mp_obj_t entry = mp_iternext(listdir);
+	size_t n_args = 1;
+	mp_obj_t args[] = {mp_obj_new_str(path, strlen(path))};
+    mp_obj_t listdir = mp_vfs_ilistdir(n_args, args); //mp_call_function_1(listdir, mp_obj_new_str(path, strlen(path)));
+	mp_obj_t entry = mp_iternext(listdir);
 
     while (entry != MP_OBJ_STOP_ITERATION) {
         mp_obj_tuple_t *t = MP_OBJ_TO_PTR(entry);
@@ -75,14 +104,24 @@ bool usqlite_file_exists(const char *pathname) {
         entry = mp_iternext(listdir);
     }
 
-
     return exists;
 }
 
 // ------------------------------------------------------------------------------
+STATIC mp_vfs_mount_t *lookup_path(mp_obj_t path_in, mp_obj_t *path_out) {
+    const char *path = mp_obj_str_get_str(path_in);
+    const char *p_out;
+    *path_out = mp_const_none;
+    mp_vfs_mount_t *vfs = mp_vfs_lookup_path(path, &p_out);
+    if (vfs != MP_VFS_NONE && vfs != MP_VFS_ROOT) {
+        *path_out = mp_obj_new_str_of_type(mp_obj_get_type(path_in),
+            (const byte *)p_out, strlen(p_out));
+    }
+    return vfs;
+}
 
 int usqlite_file_open(MPFILE *file, const char *pathname, int flags) {
-    LOGFUNC;
+	LOGFUNC;
 
     mp_obj_t filename = mp_obj_new_str(pathname, strlen(pathname));
 
@@ -109,14 +148,36 @@ int usqlite_file_open(MPFILE *file, const char *pathname, int flags) {
 
     mp_obj_t filemode = mp_obj_new_str(mode, strlen(mode));
 
-    usqlite_logprintf(___FUNC___ " '%s' mode:%s\n", pathname, mode);
 
+
+//	mp_raise_TypeError(MP_ERROR_TEXT("cannot open file1"));
+	mp_vfs_mount_t *vfs = lookup_path(filename, &filename);
+   
+	mp_obj_t meth[2 + 2];
+	mp_obj_t args[2] = {filename, filemode};
+	size_t n_args = 2;
+//	mp_raise_ValueError(MP_ERROR_TEXT("called load method..."));
+    mp_load_method(vfs->obj, MP_QSTR_open, meth);
+    if (args != NULL) {
+        memcpy(meth + 2, args, n_args * sizeof(*args));
+    }
+    file->stream = mp_call_method_n_kw(n_args, 0, meth);
+    strcpy(file->pathname, pathname);
+	file->flags = flags;
+	return SQLITE_OK;
+
+
+
+
+
+
+
+/*
     mp_obj_t open = usqlite_method(&mp_module_io, MP_QSTR_open);
     file->stream = mp_call_function_2(open, filename, filemode);
     strcpy(file->pathname, pathname);
     file->flags = flags;
-
-    // const mp_stream_p_t* stream = mp_get_stream(file->stream);
+*/
 
     return SQLITE_OK;
 }
