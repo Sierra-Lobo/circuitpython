@@ -96,7 +96,7 @@ bool usqlite_file_exists(const char *pathname) {
         int type = mp_obj_get_int(t->items[1]);
         if (type == 0x8000) {
             const char *name = mp_obj_str_get_str(t->items[0]);
-            if ((exists = strcmp(filename, name) == 0)) {
+            if ((exists = (strcmp(filename, name) == 0))) {
                 break;
             }
         }
@@ -132,15 +132,24 @@ int usqlite_file_open(MPFILE *file, const char *pathname, int flags) {
     if (flags & SQLITE_OPEN_CREATE) {
         if (!usqlite_file_exists(pathname)) {
             *pMode++ = 'w';
+			mp_raise_ValueError(MP_ERROR_TEXT("flagss 1"));
         }
+		else {
+			*pMode++ = 'r';
+			*pMode++ = '+';
+		}
+		//	mp_raise_ValueError(MP_ERROR_TEXT("flagss 2"));
 
-        *pMode++ = '+';
+        //*pMode++ = '+';
     } else if (flags & SQLITE_OPEN_READWRITE) {
+			mp_raise_ValueError(MP_ERROR_TEXT("flagss 3"));
         *pMode++ = 'r';
         *pMode++ = '+';
     } else if (flags & SQLITE_OPEN_READONLY) {
+			mp_raise_ValueError(MP_ERROR_TEXT("flagss 4"));
         *pMode++ = 'r';
     } else {
+			mp_raise_ValueError(MP_ERROR_TEXT("flagss 5"));
         *pMode++ = 'r';
     }
 
