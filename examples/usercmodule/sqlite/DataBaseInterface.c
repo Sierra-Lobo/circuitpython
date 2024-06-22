@@ -4,6 +4,7 @@
 
 
 
+
 status initializeDatabase(usqlite_connection_t* self)
 {
 	//if (self->active) return SUCCESS;
@@ -12,6 +13,7 @@ status initializeDatabase(usqlite_connection_t* self)
 	cursor.connection = self;
 	int result= SUCCESS;
 	//need way of checking if tables have already been made
+	updateTablesList(self);
 	if (!(self->tables & 1)) {	
   static const  char* create_config =
       "CREATE TABLE configs( id INTEGER PRIMARY KEY, value BLOB NOT NULL);";

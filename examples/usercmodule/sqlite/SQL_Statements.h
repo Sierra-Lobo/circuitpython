@@ -1,6 +1,6 @@
 #include "string.h"
 
-/*
+  /*
    * **********************************
    * DATABASE TABLE CREATION STATEMENTS
    * **********************************
@@ -12,11 +12,11 @@
    * @author Owen DelBene
    * 6/8/2024
    */
-/*  static const  char* create_config =
+  static const  char* create_config =
       "CREATE TABLE configs("
       "id INTEGER PRIMARY KEY,"
       "value BLOB NOT NULL);";
-*/
+
   /**
    * @brief Create the commands table
    *

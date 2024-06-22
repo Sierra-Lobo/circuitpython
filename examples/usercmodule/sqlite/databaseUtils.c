@@ -1,7 +1,7 @@
 #include "databaseUtils.h"
 status getText(usqlite_cursor_t* self, int column,  char** text, size_t* n)
 {
-	const unsigned char* ptr = sqlite3_column_text(self->stmt, column);
+	(*text) = sqlite3_column_text(self->stmt, column);
 	*n = sqlite3_column_bytes(self->stmt, column);
 	//memcpy(text, ptr, n);
 	return SUCCESS;
@@ -45,17 +45,18 @@ void updateTablesList(usqlite_connection_t* conn) {
 
 	usqlite_cursor_t self;
 
-	createStatementPersistent(conn, &self, "SELECT name FROM pragma_table_list;");
+	createStatement(conn, &self, "SELECT name FROM pragma_table_list;");
 	
 	conn->tables = 0;
 
 	char* tableName;
 	size_t n;
-    while( self.rc != SQLITE_DONE ) {
+	size_t max = 10;
+    while( self.rc != SQLITE_DONE  && (max > 0)) {
 	  stepExecute(&self); 
       if( self.rc == SQLITE_ROW ) {
 		  getText(&self, 0, &tableName,&n );
-		  if (strcmp(tableName, "config") == 0) conn->tables |= 1;
+		  if (strcmp(tableName, "configs") == 0) conn->tables |= 1;
 		  else if (strcmp(tableName, "commands") == 0) conn->tables |= (1 << COMMANDS);
 		  else if (strcmp(tableName, "soh") == 0) conn->tables |= (1 << SOH);
 		  else if (strcmp(tableName, "downlinks") == 0) conn->tables |= (1 << DOWNLINKS);
@@ -66,6 +67,7 @@ void updateTablesList(usqlite_connection_t* conn) {
 		mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("SQLITE TABLE CHECK ERROR"));
         return;
       }
+	  --max;
     }
 
 

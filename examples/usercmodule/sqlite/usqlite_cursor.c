@@ -132,8 +132,8 @@ MP_DEFINE_CONST_FUN_OBJ_1(usqlite_cursor_close_obj, usqlite_cursor_close);
 
 int stepExecute(usqlite_cursor_t *self) {
     self->rc = sqlite3_step(self->stmt);
-	return self->rc;
-	mp_raise_TypeError(MP_ERROR_TEXT("before step Execute!"));
+	//return self->rc;
+	//mp_raise_TypeError(MP_ERROR_TEXT("before step Execute!"));
     switch (self->rc)
     {
         case SQLITE_OK:
