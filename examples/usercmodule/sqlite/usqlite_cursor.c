@@ -101,13 +101,10 @@ STATIC void usqlite_cursor_print(const mp_print_t *print, mp_obj_t self_in, mp_p
 
 // ------------------------------------------------------------------------------
 
-mp_obj_t usqlite_cursor_close(mp_obj_t self_in) {
-    LOGFUNC;
-    // usqlite_logprintf(___FUNC___ "\n");
+void cursorClose(usqlite_cursor_t* self) {
 
-    usqlite_cursor_t *self = (usqlite_cursor_t *)MP_OBJ_TO_PTR(self_in);
     if (!self->stmt) {
-        return mp_const_none;
+        return ;
     }
 
     usqlite_logprintf(___FUNC___ " closing: '%s'\n", sqlite3_sql(self->stmt));
@@ -116,7 +113,17 @@ mp_obj_t usqlite_cursor_close(mp_obj_t self_in) {
     self->rowcount = -1;
     self->rc = SQLITE_OK;
 
-    return mp_const_none;
+
+}
+
+mp_obj_t usqlite_cursor_close(mp_obj_t self_in) {
+    LOGFUNC;
+    // usqlite_logprintf(___FUNC___ "\n");
+
+    usqlite_cursor_t *self = (usqlite_cursor_t *)MP_OBJ_TO_PTR(self_in);
+
+	cursorClose(self);
+	return mp_const_none;
 }
 
 MP_DEFINE_CONST_FUN_OBJ_1(usqlite_cursor_close_obj, usqlite_cursor_close);
@@ -125,7 +132,8 @@ MP_DEFINE_CONST_FUN_OBJ_1(usqlite_cursor_close_obj, usqlite_cursor_close);
 
 int stepExecute(usqlite_cursor_t *self) {
     self->rc = sqlite3_step(self->stmt);
-
+	return self->rc;
+	mp_raise_TypeError(MP_ERROR_TEXT("before step Execute!"));
     switch (self->rc)
     {
         case SQLITE_OK:

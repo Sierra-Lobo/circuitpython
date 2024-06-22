@@ -77,7 +77,7 @@ void updateTablesList(usqlite_connection_t* conn) {
 
 int createStatement(usqlite_connection_t* conn, usqlite_cursor_t* self, const char* sql)
 {
-	int ret = sqlite3_prepare_v2(conn->db, sql, -1, &self->stmt, NULL );	
+	int ret = sqlite3_prepare_v2(conn->db, sql, strlen(sql), &self->stmt, NULL );	
 	self->connection = conn;
 	if (ret != SQLITE_OK) {
 		mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("could not create sql stmt"));

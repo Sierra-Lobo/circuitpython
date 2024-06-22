@@ -46,7 +46,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(usqlite_initializeDatabase_obj, usqlite_initializeData
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_insertSoh_obj, 3, 3 ,usqlite_insertSoh);
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_fetchSoh_obj, 3, 3 ,usqlite_fetchSoh);
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_logEvent_obj, 5, 5 ,usqlite_logEvent);
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_insertCommand_obj, 3, 3 ,usqlite_insertCommand);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_insertCommand_obj, 4, 4 ,usqlite_insertCommand);
 MP_DEFINE_CONST_FUN_OBJ_1(usqlite_getNextCommand_obj, usqlite_getNextCommand);
 MP_DEFINE_CONST_FUN_OBJ_2(usqlite_deleteCommand_obj, usqlite_deleteCommand);
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_insertPayloadData_obj, 3, 3 ,usqlite_insertPayloadData);
@@ -87,7 +87,7 @@ STATIC mp_obj_t usqlite_connection_close(mp_obj_t self_in) {
     if (!self->db) {
         return mp_const_none;
     }
-
+	/*
     for (size_t i = 0; i < self->cursors.len; i++)
     {
         mp_obj_t cursor = self->cursors.items[i];
@@ -99,7 +99,7 @@ STATIC mp_obj_t usqlite_connection_close(mp_obj_t self_in) {
         m_free(MP_OBJ_TO_PTR(cursor));
         #endif
     }
-
+	*/
     usqlite_logprintf(___FUNC___ " closing '%s'\n", sqlite3_db_filename(self->db, NULL));
     sqlite3_close(self->db);
     self->db = NULL;

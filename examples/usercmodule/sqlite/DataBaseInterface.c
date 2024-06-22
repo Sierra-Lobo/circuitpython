@@ -6,71 +6,80 @@
 
 status initializeDatabase(usqlite_connection_t* self)
 {
-	if (self->active) return SUCCESS;
+	//if (self->active) return SUCCESS;
 	
 	usqlite_cursor_t cursor;
+	cursor.connection = self;
 	int result= SUCCESS;
 	//need way of checking if tables have already been made
-	if (self->tables & 1) {	
+	if (!(self->tables & 1)) {	
+  static const  char* create_config =
+      "CREATE TABLE configs( id INTEGER PRIMARY KEY, value BLOB NOT NULL);";
 		result = executeStr(&cursor, create_config);
-		if (result != SUCCESS) {
+		if (result != SUCCESS && 0) {
 			sqlite3_close(self->db);
-			mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Cannot create config table"));
+            mp_raise_ValueError(MP_ERROR_TEXT("result is not success"));
 			return result;
 		}
 	}
 
-	if (self->tables & (1 << COMMANDS)) {
+	if (!(self->tables & (1 << COMMANDS))) {
 		result = executeStr(&cursor, create_commands);
-		if (result != SUCCESS) {
+		if (result != SUCCESS && 0) {
 			sqlite3_close(self->db);
 			mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Cannot create commands table"));
 			return result;
 		}
+		self->tables |= (1 << COMMANDS);
 	}
 
-	if (self->tables & (1 << SOH)) {
+	if (!(self->tables & (1 << SOH))) {
 		result = executeStr(&cursor, create_soh);
-		if (result != SUCCESS) {
+		if (result != SUCCESS && 0) {
 			sqlite3_close(self->db);
 			mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Cannot create soh table"));
 			return result;
 		}
+		self->tables |= (1 << SOH);
 	}
 
-	if (self->tables & (1 << DOWNLINKS)) {
+	if (!(self->tables & (1 << DOWNLINKS))) {
 		result = executeStr(&cursor, create_downlinks);
-		if (result != SUCCESS) {
+		if (result != SUCCESS && 0) {
 			sqlite3_close(self->db);
 			mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Cannot create downlinks table"));
 			return result;
 		}
+		self->tables |= (1 << DOWNLINKS);
 	}
 
-	if (self->tables & (1 << EVENTS)) {
+	if (!(self->tables & (1 << EVENTS))) {
 		result = executeStr(&cursor, create_events);
-		if (result != SUCCESS) {
+		if (result != SUCCESS && 0) {
 			sqlite3_close(self->db);
 			mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Cannot create events table"));
 			return result;
 			}
+		self->tables |= (1 << EVENTS);
 		}
-	if (self->tables & (1 << UPLINKS)) {
+	if (!(self->tables & (1 << UPLINKS))) {
 		result = executeStr(&cursor, create_uplinks);
-		if (result != SUCCESS) {
+		if (result != SUCCESS && 0) {
 			sqlite3_close(self->db);
 			mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Cannot create uplinks table"));
 			return result;
 		}
+		self->tables |= (1 << UPLINKS);
 	}
 	
-	if (self->tables & (1 << PAYLOAD)) {
+	if (!(self->tables & (1 << PAYLOAD))) {
 		result = executeStr(&cursor, create_payload);
-		if (result != SUCCESS) {
+		if (result != SUCCESS && 0) {
 			sqlite3_close(self->db);
 			mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Cannot create uplinks table"));
 			return result;
 		}
+		self->tables |= (1 << PAYLOAD);
 	}
 
 
@@ -83,15 +92,17 @@ int insertSoh(usqlite_connection_t* self, uint8_t sohEnum, uint8_t* data, size_t
 	//not real just for test vvv
 	sqlite3_blob* blob;
 	uint32_t TXID = 1;
-	int ec = sqlite3_blob_open( self->db, "main", "downlinks", "data", TXID, 0, &blob );
-	ec = sqlite3_blob_close(blob);
+	int ec = sqlite3_blob_open( self->db, "main", "downlinks", "data", TXID, 1, &blob );
+	ec = sqlite3_blob_write(blob, data, len, 0);
+	sqlite3_blob_close(blob);
+
 	uint8_t* addr;
 	size_t length = 0;
 	int prot = 0;
 	int flags = 0;
 	int fd = 0;
 	int offset = 0;
-
+	return ec;
 	//end not real just for test ^^^
 }
 
@@ -99,11 +110,11 @@ int insertSoh(usqlite_connection_t* self, uint8_t sohEnum, uint8_t* data, size_t
 
 int executeStr(usqlite_cursor_t* self, const char* sql) {
 
-    usqlite_cursor_close(self);
-
+	self->rowcount = 0;
+    //cursorClose(self);
     if (!sql || !*sql) {
-        mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Empty sql"));
-        return INPUT_ERROR;
+        mp_raise_ValueError(MP_ERROR_TEXT("empty sql??"));
+		return INPUT_ERROR;
     }
 
 	createStatement(self->connection, self, sql);	
@@ -184,7 +195,7 @@ int insertCommand(usqlite_connection_t* self, uint8_t cmdID, double dueTime, uin
 	sqlite3_bind_int64(cursor.stmt, 0, dueTime);
 	sqlite3_bind_int(cursor.stmt, 1, cmdID);
 	sqlite3_bind_blob(cursor.stmt, 2, args, len, SQLITE_TRANSIENT);
-	executeStmtNoReturn(&cursor);
+	stepExecute(&cursor);
 	return SUCCESS; 
 
 }

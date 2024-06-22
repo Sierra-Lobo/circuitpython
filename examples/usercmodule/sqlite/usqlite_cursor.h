@@ -55,5 +55,6 @@ mp_obj_t usqlite_cursor_close(mp_obj_t self_in);
 
 int stepExecute(usqlite_cursor_t *self); 
 // ------------------------------------------------------------------------------
+void cursorClose(usqlite_cursor_t* self);
 
 #endif

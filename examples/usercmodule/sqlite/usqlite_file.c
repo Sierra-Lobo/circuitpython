@@ -132,7 +132,7 @@ int usqlite_file_open(MPFILE *file, const char *pathname, int flags) {
     if (flags & SQLITE_OPEN_CREATE) {
         if (!usqlite_file_exists(pathname)) {
             *pMode++ = 'w';
-			mp_raise_ValueError(MP_ERROR_TEXT("flagss 1"));
+			*pMode++ = '+';
         }
 		else {
 			*pMode++ = 'r';

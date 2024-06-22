@@ -21,14 +21,9 @@ mp_obj_t usqlite_insertSoh(size_t n_args, const mp_obj_t* args)
 	usqlite_connection_t* self = MP_OBJ_TO_PTR(args[0]);
 	uint8_t sohEnum = mp_obj_get_int(args[1]);
 	mp_buffer_info_t bufinfo;
-	mp_get_buffer(args[2], &bufinfo, MP_BUFFER_RW);
-	if (insertSoh(self, sohEnum, bufinfo.buf, bufinfo.len) !=0){
-        mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Error inserting soh"));
-		return mp_obj_new_int(-1);
-	}	
-
-	return mp_obj_new_int(0);
-
+	mp_get_buffer(args[2], &bufinfo, MP_BUFFER_READ);
+	int ec = insertSoh(self, sohEnum, bufinfo.buf, bufinfo.len);
+	return mp_obj_new_int(ec);
 }
 
 
@@ -80,7 +75,7 @@ mp_obj_t usqlite_logEvent(size_t n_args, const mp_obj_t* args)
 	usqlite_connection_t* self = MP_OBJ_TO_PTR(args[0]);
 	uint8_t level = mp_obj_get_int(args[1]);
 	mp_buffer_info_t bufinfo;
-	mp_get_buffer(args[2], &bufinfo, MP_BUFFER_RW);
+	mp_get_buffer(args[2], &bufinfo, MP_BUFFER_READ);
 	uint32_t timestamp = mp_obj_get_int(args[3]);
 	uint32_t uptime = mp_obj_get_int(args[4]);
 	
@@ -95,9 +90,8 @@ mp_obj_t usqlite_insertCommand(size_t n_args, const mp_obj_t* args)
 	usqlite_connection_t* self = MP_OBJ_TO_PTR(args[0]);
 	uint8_t cmdID = mp_obj_get_int(args[1]);
 	mp_buffer_info_t bufinfo;
-	mp_get_buffer(args[2], &bufinfo, MP_BUFFER_RW);
+	mp_get_buffer(args[2], &bufinfo, MP_BUFFER_READ);
 	uint32_t timestamp = mp_obj_get_int(args[3]);
-	
 	int ret = insertCommand(self, cmdID, timestamp, bufinfo.buf, bufinfo.len);	
 	return mp_obj_new_int(ret);
 	
@@ -135,10 +129,11 @@ mp_obj_t usqlite_insertPayloadData(size_t n_args, const mp_obj_t* args)
 	uint32_t timestamp = mp_obj_get_int(args[1]);
 	//switch to numpy array ?
 	mp_buffer_info_t bufinfo;
-	mp_get_buffer(args[2], &bufinfo, MP_BUFFER_RW);
+	mp_get_buffer(args[2], &bufinfo, MP_BUFFER_READ);
 	
 	mp_buffer_info_t bufinfo2;
-	mp_get_buffer(args[2], &bufinfo2, MP_BUFFER_RW);
+	mp_get_buffer(args[2], &bufinfo, MP_BUFFER_READ);
+	
 	int ret = insertPayloadData(self, bufinfo2.buf, bufinfo2.len, bufinfo.buf, timestamp);
 	return mp_obj_new_int(ret);
 	
@@ -214,7 +209,8 @@ mp_obj_t usqlite_createUplink(size_t n_args, const mp_obj_t* args)
 	uint32_t numPackets = mp_obj_get_int(args[3]);
 	//switch to numpy array ?
 	mp_buffer_info_t bufinfo;
-	mp_get_buffer(args[4], &bufinfo, MP_BUFFER_RW);
+	
+	mp_get_buffer(args[2], &bufinfo, MP_BUFFER_READ);
 		
 	int ret = createUplink(self, txID, txSize, numPackets, bufinfo.buf, bufinfo.len);
 	return mp_obj_new_int(ret);
