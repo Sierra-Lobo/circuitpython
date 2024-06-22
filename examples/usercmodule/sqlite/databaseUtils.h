@@ -1,6 +1,7 @@
 #pragma once
 #include "usqlite.h"
 
+#define get_max_rows  "SELECT max(id) from ?1"
 
 
 /**
@@ -102,3 +103,5 @@ void resetStatement(usqlite_cursor_t* self);
  * @param conn: usqlite connection object to store table record
  */
 void updateTablesList(usqlite_connection_t* conn); 
+
+uint32_t getMaxRows(usqlite_connection_t* self, const char* tableName);

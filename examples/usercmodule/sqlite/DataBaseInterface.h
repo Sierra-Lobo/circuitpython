@@ -353,4 +353,33 @@ int clearTable(usqlite_connection_t* self, char* tableName);
 
 int getMissingPacketIds(usqlite_connection_t* self, uint32_t txID, uint8_t* packetIDs, size_t* len);
 
+
+/**
+ * @brief Read a blob from a table for incremental io
+ *
+ * @param self usqlite connection object
+ * @param tableName name of the table
+ * @param rowID row index to select (primary key)
+ * @param data output data
+ * @param len desired len (if available)
+ * @param offset desired offset
+ *
+ * @return status
+ */
+int fetchDataBlob(usqlite_connection_t* self, const char* tableName, uint32_t rowID, uint8_t* data, size_t len, size_t offset);
+
+
+/**
+ * @brief Write a blob of data into a table in the database
+ *
+ * @param self usqlite connection object
+ * @param tableName name of the table
+ * @param rowID row index in table
+ * @param data input data bytes
+ * @param len number of data bytes
+ * @param offset offset in the database blob
+ *
+ * @return status
+ */
+int writeDataBlob(usqlite_connection_t* self, const char* tableName, uint32_t rowID, uint8_t* data, size_t len, size_t offset);
 #endif //DATABASE_INTERFACE_H

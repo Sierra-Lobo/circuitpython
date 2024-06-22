@@ -1,24 +1,22 @@
 #include "DataBaseInterface.h"
 #include "databaseUtils.h"
-//Do I need to usqlite_cursor_close for every exec()?
 
 
 
 
 status initializeDatabase(usqlite_connection_t* self)
 {
-	//if (self->active) return SUCCESS;
-	
+	if (self->active) return SUCCESS;
+		
 	usqlite_cursor_t cursor;
 	cursor.connection = self;
 	int result= SUCCESS;
+	
 	//need way of checking if tables have already been made
 	updateTablesList(self);
 	if (!(self->tables & 1)) {	
-  static const  char* create_config =
-      "CREATE TABLE configs( id INTEGER PRIMARY KEY, value BLOB NOT NULL);";
 		result = executeStr(&cursor, create_config);
-		if (result != SUCCESS && 0) {
+		if (result != SQLITE_DONE) {
 			sqlite3_close(self->db);
             mp_raise_ValueError(MP_ERROR_TEXT("result is not success"));
 			return result;
@@ -27,7 +25,7 @@ status initializeDatabase(usqlite_connection_t* self)
 
 	if (!(self->tables & (1 << COMMANDS))) {
 		result = executeStr(&cursor, create_commands);
-		if (result != SUCCESS && 0) {
+		if (result != SQLITE_DONE) {
 			sqlite3_close(self->db);
 			mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Cannot create commands table"));
 			return result;
@@ -37,7 +35,7 @@ status initializeDatabase(usqlite_connection_t* self)
 
 	if (!(self->tables & (1 << SOH))) {
 		result = executeStr(&cursor, create_soh);
-		if (result != SUCCESS && 0) {
+		if (result != SQLITE_DONE) {
 			sqlite3_close(self->db);
 			mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Cannot create soh table"));
 			return result;
@@ -47,7 +45,7 @@ status initializeDatabase(usqlite_connection_t* self)
 
 	if (!(self->tables & (1 << DOWNLINKS))) {
 		result = executeStr(&cursor, create_downlinks);
-		if (result != SUCCESS && 0) {
+		if (result != SQLITE_DONE) {
 			sqlite3_close(self->db);
 			mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Cannot create downlinks table"));
 			return result;
@@ -57,7 +55,7 @@ status initializeDatabase(usqlite_connection_t* self)
 
 	if (!(self->tables & (1 << EVENTS))) {
 		result = executeStr(&cursor, create_events);
-		if (result != SUCCESS && 0) {
+		if (result != SQLITE_DONE) {
 			sqlite3_close(self->db);
 			mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Cannot create events table"));
 			return result;
@@ -66,7 +64,7 @@ status initializeDatabase(usqlite_connection_t* self)
 		}
 	if (!(self->tables & (1 << UPLINKS))) {
 		result = executeStr(&cursor, create_uplinks);
-		if (result != SUCCESS && 0) {
+		if (result != SQLITE_DONE) {
 			sqlite3_close(self->db);
 			mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Cannot create uplinks table"));
 			return result;
@@ -76,7 +74,7 @@ status initializeDatabase(usqlite_connection_t* self)
 	
 	if (!(self->tables & (1 << PAYLOAD))) {
 		result = executeStr(&cursor, create_payload);
-		if (result != SUCCESS && 0) {
+		if (result != SQLITE_DONE) {
 			sqlite3_close(self->db);
 			mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Cannot create uplinks table"));
 			return result;
@@ -84,7 +82,7 @@ status initializeDatabase(usqlite_connection_t* self)
 		self->tables |= (1 << PAYLOAD);
 	}
 
-
+	self->active = 1;
 	return result;
 
 
@@ -110,43 +108,6 @@ int insertSoh(usqlite_connection_t* self, uint8_t sohEnum, uint8_t* data, size_t
 
 
 
-int executeStr(usqlite_cursor_t* self, const char* sql) {
-
-	self->rowcount = 0;
-    //cursorClose(self);
-    if (!sql || !*sql) {
-        mp_raise_ValueError(MP_ERROR_TEXT("empty sql??"));
-		return INPUT_ERROR;
-    }
-
-	createStatement(self->connection, self, sql);	
-	return stepExecute(self);
-	
-}
-
-//TODO execute until done
-int executeStmtNoReturn(usqlite_cursor_t* self) {
-    self->rowcount = 0;
-
-	while (! (self->rc == SQLITE_DONE)) {
-    stepExecute(self);
-
-    switch (self->rc)
-    {
-        case SQLITE_ROW:
-            break;
-
-        case SQLITE_DONE:
-            self->rowcount = sqlite3_changes(self->connection->db);
-            break;
-
-        default:
-            self->rowcount = -1;
-            break;
-    }
-	}
-    return SUCCESS;
-}
 
 
 
@@ -185,7 +146,7 @@ int logEvent(usqlite_connection_t* self, uint8_t level, const char* msg, size_t 
 	sqlite3_bind_int64(cursor.stmt, 1, timestamp);
 	sqlite3_bind_int64(cursor.stmt, 1, uptime);
 	sqlite3_bind_text(cursor.stmt, 2, msg, n, SQLITE_TRANSIENT); 
-	executeStmtNoReturn(&cursor);
+	stepExecute(&cursor);
 	return SUCCESS; 
 }
 
@@ -222,7 +183,7 @@ int deleteCommand(usqlite_connection_t* self, uint32_t index){
 	usqlite_cursor_t cursor;
 	createStatement(self, &cursor, delete_command);
 	sqlite3_bind_int64(cursor.stmt, 0, index);
-	executeStmtNoReturn(&cursor);
+	stepExecute(&cursor);
 	return SUCCESS; 
 
 }
@@ -235,7 +196,7 @@ int insertPayloadData(usqlite_connection_t* self, uint8_t* data, size_t len,  do
 	sqlite3_bind_int64(cursor.stmt, 0, timestamp);
 	sqlite3_bind_blob(cursor.stmt, 1, pos, 3 * sizeof(double), SQLITE_TRANSIENT);
 	sqlite3_bind_blob(cursor.stmt, 2, data, len, SQLITE_TRANSIENT);
-	executeStmtNoReturn(&cursor);
+	stepExecute(&cursor);
 	return SUCCESS; 
 
 }
@@ -293,7 +254,7 @@ int deletePayloadDataID(usqlite_connection_t* self, uint32_t index) {
 	usqlite_cursor_t cursor;
 	createStatement(self, &cursor, delete_payload);
 	sqlite3_bind_int64(cursor.stmt, 0, index);
-	executeStmtNoReturn(&cursor);
+	stepExecute(&cursor);
 	return SUCCESS; 
 
 }
@@ -311,7 +272,7 @@ int createUplink(usqlite_connection_t* self, uint32_t txID, uint32_t txSize, uin
 	sqlite3_bind_int64(cursor.stmt, 1, txSize);
 	sqlite3_bind_blob(cursor.stmt, 2, missing, missingSize, SQLITE_TRANSIENT);
 	sqlite3_bind_int64(cursor.stmt, 3, numPackets);
-	executeStmtNoReturn(&cursor);
+	stepExecute(&cursor);
 	return SUCCESS; 
 
 }
@@ -329,7 +290,7 @@ int deleteUplink(usqlite_connection_t* self, uint32_t uplinkID) {
 	usqlite_cursor_t cursor;
 	createStatement(self, &cursor, delete_uplink);
 	sqlite3_bind_int64(cursor.stmt, 0, uplinkID);
-	executeStmtNoReturn(&cursor);
+	stepExecute(&cursor);
 	return SUCCESS; 
 
 
@@ -352,5 +313,29 @@ int getMissingPacketIds(usqlite_connection_t* self, uint32_t txID, uint8_t* pack
 }
 
 
+
+int fetchDataBlob(usqlite_connection_t* self, const char* tableName, uint32_t rowID, uint8_t* data, size_t len, size_t offset)
+{
+	sqlite3_blob* blob;
+	
+	int ec = sqlite3_blob_open( self->db, "main", tableName, "data", rowID, 0, &blob );
+	int available = sqlite3_blob_bytes(blob) - offset;
+	len = len > available ?  available : len;
+	ec = sqlite3_blob_read(blob, data, len, offset);
+	ec =  sqlite3_blob_close(blob);
+	return ec;
+}
+
+int writeDataBlob(usqlite_connection_t* self, const char* tableName, uint32_t rowID, uint8_t* data, size_t len, size_t offset)
+{
+	sqlite3_blob* blob;
+	
+	int ec = sqlite3_blob_open( self->db, "main", tableName, "data", rowID, 1, &blob );
+	int available = sqlite3_blob_bytes(blob) - offset;
+	len = len > available ?  available : len;
+	ec = sqlite3_blob_write(blob, data, len, offset);
+	ec =  sqlite3_blob_close(blob);
+	return ec;
+}
 
 

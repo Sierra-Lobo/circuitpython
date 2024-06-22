@@ -12,6 +12,8 @@ mp_obj_t usqlite_insertPayloadData(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_fetchPayloadData(size_t n_args,size_t n_kw, const mp_obj_t* args);
 mp_obj_t usqlite_deletePayloadDataID(mp_obj_t self_in, mp_obj_t index);
 mp_obj_t usqlite_createUplink(size_t n_args, const mp_obj_t* args);
+mp_obj_t usqlite_fetchDataBlobInto(size_t n_args, const mp_obj_t* args);
+mp_obj_t usqlite_writeDataBlob(size_t n_args, const mp_obj_t* args);
 
 
 
@@ -217,6 +219,24 @@ mp_obj_t usqlite_createUplink(size_t n_args, const mp_obj_t* args)
 	
 }
 
+mp_obj_t usqlite_fetchDataBlobInto(size_t n_args, const mp_obj_t* args)
+{
+
+	usqlite_connection_t* self = MP_OBJ_TO_PTR(args[0]);
+	const char* tableName = mp_obj_str_get_str(args[1]);
+	uint32_t rowID = mp_obj_get_int(args[2]);
+	uint32_t len = mp_obj_get_int(args[3]);
+	uint32_t offset = mp_obj_get_int(args[4]);
+
+	mp_buffer_info_t bufinfo;
+	mp_get_buffer_raise(args[5], &bufinfo, MP_BUFFER_WRITE);
+	if (bufinfo.len < len) {
+		mp_raise_ValueError(MP_ERROR_TEXT("Buffer smaller than desired size"));
+	}
+	return mp_obj_new_int(fetchDataBlob(self, tableName, rowID, bufinfo.buf, len, offset));
+}
+
+
 //possibly put all delete commands in one and use kwargs to select right thing
 /*
 mp_obj_t usqlite_deleteUplink(mp_obj_t self_in, mp_obj_t index)
@@ -228,6 +248,22 @@ mp_obj_t usqlite_deleteUplink(mp_obj_t self_in, mp_obj_t index)
 }
 */
 
+mp_obj_t usqlite_writeDataBlob(size_t n_args, const mp_obj_t* args)
+{
+
+	usqlite_connection_t* self = MP_OBJ_TO_PTR(args[0]);
+	const char* tableName = mp_obj_str_get_str(args[1]);
+	uint32_t rowID = mp_obj_get_int(args[2]);
+	uint32_t len = mp_obj_get_int(args[3]);
+	uint32_t offset = mp_obj_get_int(args[4]);
+
+	mp_buffer_info_t bufinfo;
+	mp_get_buffer(args[5], &bufinfo, MP_BUFFER_READ);
+	if (bufinfo.len < len) {
+		mp_raise_ValueError(MP_ERROR_TEXT("Buffer smaller than desired size"));
+	}
+	return mp_obj_new_int(writeDataBlob(self, tableName, rowID, bufinfo.buf, len, offset));
+}
 
 
 

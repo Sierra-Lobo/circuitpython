@@ -39,6 +39,8 @@ mp_obj_t usqlite_insertPayloadData(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_fetchPayloadData(size_t n_args,size_t n_kw, const mp_obj_t* args);
 mp_obj_t usqlite_deletePayloadDataID(mp_obj_t self_in, mp_obj_t index);
 mp_obj_t usqlite_createUplink(size_t n_args, const mp_obj_t* args);
+mp_obj_t usqlite_fetchDataBlobInto(size_t n_args, const mp_obj_t* args);
+mp_obj_t usqlite_writeDataBlob(size_t n_args, const mp_obj_t* args);
 
 
 MP_DEFINE_CONST_FUN_OBJ_1(usqlite_initializeDatabase_obj, usqlite_initializeDatabase);
@@ -53,6 +55,8 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_insertPayloadData_obj, 3, 3 ,usqlite
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_fetchPayloadData_obj,2, 3,  usqlite_fetchPayloadData);
 MP_DEFINE_CONST_FUN_OBJ_2(usqlite_deletePayloadDataID_obj, usqlite_deletePayloadDataID);
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_createUplink_obj, 5, 5 ,usqlite_createUplink);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_fetchDataBlobInto_obj, 6, 6 ,usqlite_fetchDataBlobInto);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_writeDataBlob_obj, 6, 6 ,usqlite_writeDataBlob);
 
 
 STATIC mp_obj_t usqlite_connection_close(mp_obj_t self_in);
@@ -309,6 +313,8 @@ STATIC const mp_rom_map_elem_t usqlite_connection_locals_dict_table[] =
 	{ MP_ROM_QSTR(MP_QSTR_fetchPayloadData),  MP_ROM_PTR(&usqlite_fetchPayloadData_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_deletePayloadDataID),  MP_ROM_PTR(&usqlite_deletePayloadDataID_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_createUplink),  MP_ROM_PTR(&usqlite_createUplink_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_fetchDataBlobInto),  MP_ROM_PTR(&usqlite_fetchDataBlobInto_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_writeDataBlob),  MP_ROM_PTR(&usqlite_writeDataBlob_obj) },
 };
 
 MP_DEFINE_CONST_DICT(usqlite_connection_locals_dict, usqlite_connection_locals_dict_table);
