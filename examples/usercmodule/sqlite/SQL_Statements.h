@@ -1,4 +1,13 @@
+/**
+ * @file SQL_Statements.h
+ * @brief SQL statements used frequently by functions
+ * @author Owen DelBene
+ * @date 2024-07-12
+ */
 #include "string.h"
+
+
+
 
   /*
    * **********************************
@@ -6,7 +15,12 @@
    * **********************************
    */
 
-
+  /**
+   * @brief get max number of rows in a table ordered by id
+   * used for negative index support
+   * @author Owen DelBene
+   * 7/12/2024
+   */
 #define get_max_rows = "SELECT max(id) from ?1"
 
 
@@ -20,7 +34,7 @@
   #define create_config  \
       "CREATE TABLE configs("\
       "id INTEGER PRIMARY KEY,"\
-      "value BLOB NOT NULL);"
+      "data BLOB NOT NULL);"
 
   /**
    * @brief Create the commands table
@@ -33,15 +47,10 @@
       "id INTEGER PRIMARY KEY AUTOINCREMENT,"\
       "time INTEGER NOT NULL,"\
       "cid INTEGER NOT NULL,"\
-      "params BLOB);"
+      "data BLOB);"
 
   /**
    * @brief Create the SOH table
-   *
-   * TODO: Possibly add column describing the time of the SOH w.r.t.
-   *       system uptime. Add a boolean describing if time has been
-   *       set by GPS yet. When GPS time is found, do a bulk update
-   *       of all SOH with relative time.
    *
    * @author Owen DelBene
    * 6/8/2024
@@ -68,7 +77,7 @@
       "data BLOB NOT NULL);"
 
   /**
-   * @brief Create the downlinks table
+   * @brief Create the uplinks table
    *
    * @author Owen DelBene
    * @date 6/8/2024
@@ -93,10 +102,10 @@
       "severity INTEGER NOT NULL,"\
       "time INTEGER ,"\
       "uptime INTEGER NOT NULL,"\
-      "info TEXT NOT NULL);"
+      "data TEXT NOT NULL);"
   
   /**
-   * @brief Create the commands table
+   * @brief Create the payload data table
    *
    * @author Owen DelBene
    * 6/8/2024
@@ -153,7 +162,7 @@
       "SELECT id, value FROM configs;"
 
   /**
-   * @brief Query all SOH data newer than a given time
+   * @brief Query all SOH data between two time intervals 
    *
    * @author Owen DelBene
    * 6/8/2024
@@ -167,7 +176,7 @@
       "SELECT time, data FROM soh WHERE time >= ?1 AND time <= ?2;"
   
   /**
-   * @brief Query all SOH data newer than a given time
+   * @brief Query all SOH data given an index 
    *
    * @author Owen DelBene
    * 6/8/2024
@@ -181,7 +190,7 @@
       "SELECT time, data FROM soh WHERE id =?1;"
 
   /**
-   * @brief Query all payload data newer than a given time
+   * @brief Query all payload data between two time intervals 
    *
    * @author Owen DelBene
    * 6/8/2024
@@ -209,7 +218,7 @@
       "SELECT time, data, pos FROM payload WHERE id =?1;"
   
   /**
-   * @brief Query all payload data by index
+   * @brief Query all payload data by position 
    *
    * @author Owen DelBene
    * 6/8/2024
@@ -222,7 +231,7 @@
   #define query_payload_pos \
       "SELECT time, data, pos FROM payload WHERE pos =?1;"
   /**
-   * @brief Query last given number of SOH structs
+   * @brief Query last number of SOH entries 
    *
    * @author Owen DelBene
    * @date 6/8/2024
@@ -235,7 +244,7 @@
       "SELECT time, data FROM soh ORDER BY time DESC LIMIT ?1;"
 
   /**
-   * @brief Query the next downlink to send down
+   * @brief Query the next downlink to send 
    *
    * Gets the next highest priority downlink
    *
@@ -262,7 +271,7 @@
    * @param ?1 The transmission ID of the uplink
    */
   #define query_missing_uplink \
-      "SELECT numPckts, missing FROM uplinks WHERE rowid = ?1;"
+      "SELECT numPckts, missing FROM uplinks WHERE id = ?1;"
 
   #define query_resend_requests \
       "SELECT id FROM uplinks WHERE AllBitsUnset(numPckts, missing) = 0;"
@@ -276,7 +285,7 @@
    * @param ?1 The transmission ID of the uplink
    */
   #define query_uplink_data \
-      "SELECT data FROM uplinks WHERE rowid = ?1;"
+      "SELECT data FROM uplinks WHERE id = ?1;"
 
 
   /**
@@ -299,29 +308,45 @@
    */
 
   /**
-   * @brief Insert a new command into the database
+   * @brief Insert experiment data into the database
+   * returns the id in the database 
    *
    * @author Owen DelBene
    * 6/8/2024
    *
-   * @param ?1 The time the command should occur
-   * @param ?2 The ID of the command
-   * @param ?3 Any params for the command
+   * @param ?1 The time th experiment occured
+   * @param ?2 The position the experiment occurred
+   * @param ?3 The raw experiment data
    */
   #define insert_payload \
-      "INSERT INTO commands(time, cid, params) VALUES(?1, ?2, ?3);"
-  
+      "INSERT INTO payload(time, pos, data) VALUES(?1, ?2, ?3) RETURNING id;"
+ 
   /**
-   * @brief Insert  payload data into the database
+   * @brief Insert empty experiment data into database
+   * designed to write the data incrementally via blob
+   * if data will consume too much ram at once 
    *
    * @author Owen DelBene
    * 6/8/2024
    *
-   * @param ?1 The time the experiment took place
-   * @param ?2 The gps position the experiment took place 
-   * @param ?3 The raw payload data
+   * @param ?1 The time the experiment occurred 
+   * @param ?2 The position the experiment occurred
+   * @param ?3 The length of the raw experiment data
    */
-  #define insert_command \ 
+  #define insert_payload_empty \
+      "INSERT INTO payload(time, pos, data) VALUES(?1, ?2, zeroblob(?3)) RETURNING id;"
+
+  /**
+   * @brief Insert command into database 
+   *
+   * @author Owen DelBene
+   * 6/8/2024
+   *
+   * @param ?1 The time the command should execute 
+   * @param ?2 The id of the command to execute in cdh dispatch
+   * @param ?3 The arguments to the command
+   */
+  #define insert_command \
       "INSERT INTO commands(time, cid, params) VALUES(?1, ?2, ?3);"
 
   /**
@@ -337,12 +362,12 @@
       "REPLACE INTO configs VALUES(?1, ?2);"
 
   /**
-   * @brief Insert an SOH datum
+   * @brief Insert an SOH 
    *
    * @author Owen DelBene
    * 6/8/2024
    *
-   * @param ?1 The UNIX timestamp of the datum
+   * @param ?1 The UNIX timestamp of the soh 
    * @param ?2 The SOH Data blob
    */
   #define insert_soh \
@@ -350,7 +375,7 @@
 
 
   /**
-   * @brief Insert a downlink
+   * @brief Insert a downlink into the database
    *
    * @author Owen DelBene
    * @date 6/8/2024
@@ -370,7 +395,7 @@
 
 
   /**
-   * @brief Insert an empty uplink into the database with the proper final size
+   * @brief Insert an empty uplink into the database with the final size
    *
    * @author Owen DelBene
    * @date 6/8/2024
@@ -390,11 +415,12 @@
    * @date 6/8/2024
    *
    * @param ?1 The severity of the event
-   * @param ?2 The timestamp blob
+   * @param ?2 The timestamp 
+   * @param ?2 The uptime 
    * @param ?3 The provided human readable information
    */
   #define insert_event \
-      "INSERT INTO events(severity,  time, uptime, info) VALUES(?1, ?2, ?3, ?4);"
+      "INSERT INTO events(severity,  time, uptime, data) VALUES(?1, ?2, ?3, ?4);"
 
 
   /**
@@ -407,7 +433,7 @@
    * @param ?2 The transmission ID of the uplink
    */
   #define update_missing_uplink \
-      "UPDATE uplinks SET missing = ?1 WHERE rowid = ?2;"
+      "UPDATE uplinks SET missing = ?1 WHERE id = ?2;"
 
   /*
    * **********************************
@@ -456,7 +482,7 @@
   #define delete_payload \
       "DELETE FROM PAYLOAD WHERE id = ?1;"
   /**
-   * @brief Delete all SOH data older than the given timestamp
+   * @brief Delete all SOH data between the given times 
    *
    * The delete is inclusive -- Any SOH with the given timestamp will be deleted.
    *

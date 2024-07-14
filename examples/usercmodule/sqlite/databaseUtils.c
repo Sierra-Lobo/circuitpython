@@ -154,3 +154,40 @@ uint32_t getMaxRows(usqlite_connection_t* self, const char* tableName)
 
 }
 
+uint32_t handleNegativeIndex(usqlite_connection_t* self, const char* tableName,  int index)
+{
+	if (index >= 0) return index;
+
+	uint32_t maxRows = getMaxRows(self, tableName);
+	return maxRows + index + 1;
+}
+
+
+
+void createBitset(uint8_t** bitset, size_t n)
+{
+	(*bitset) = m_new(byte, ( n / 8 ) + ( n % 8 != 0 ));
+}
+
+bool getBitsetValue(uint8_t* bitset, size_t index)
+{
+	size_t byte = index / 8;
+	size_t shift = index % 8;
+
+	return bitset[ byte ] & ( 1 << shift );
+}
+
+void setBitsetValue(uint8_t* bitset, size_t idx, bool value)
+{
+	size_t byte = idx / 8;
+	size_t shift = idx % 8;
+
+	if( value ) {
+	// Turn on the selected bit
+	bitset[byte] |= ( 1 << shift );
+	} else {
+	// Leave on all bits but the selected one
+	bitset[byte] &= ~( 1 << shift );
+	}
+
+}

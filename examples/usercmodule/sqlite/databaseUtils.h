@@ -104,4 +104,37 @@ void resetStatement(usqlite_cursor_t* self);
  */
 void updateTablesList(usqlite_connection_t* conn); 
 
+
+/**
+ * @brief get Maximum number of rows from table, assumes id is primary key
+ *
+ * @param self usqlite connection object
+ * @param tableName string name of the table
+ *
+ * @return max number of rows
+ */
 uint32_t getMaxRows(usqlite_connection_t* self, const char* tableName);
+
+
+/**
+ * @brief Handle negative indices helper function. No-ops if the index is positive. Else returns
+ * the id corresponding to the negative index supplied (ex -1 corresponds to last row in table, 
+ * -2 second to last, etc)
+ *
+ * @param self usqlite connection object
+ * @param tableName: string name of the table
+ * @param index: positive or negative index
+ *
+ * @return interpreted index
+ */
+uint32_t handleNegativeIndex(usqlite_connection_t* self, const char* tableName,  int index);
+
+
+
+void createBitset(uint8_t** bitset, size_t n);
+
+
+bool getBitsetValue(uint8_t* bitset, size_t index);
+
+
+void setBitsetValue(uint8_t* bitset, size_t idx, bool value);

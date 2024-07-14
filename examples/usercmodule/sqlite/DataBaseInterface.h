@@ -3,7 +3,7 @@
 #include "usqlite.h"
 #include "usqlite_mem.h"
 #include "usqlite_cursor.h"
-
+#include "databaseUtils.h"
 #define SOH_SIZE 512
 #define MAX_CMD 512
 
@@ -129,7 +129,7 @@ int insertCommand(usqlite_connection_t* self, uint8_t cmdID, double dueTime, uin
  *
  * @return status
  */
-int getNextCommand(usqlite_connection_t* self, uint8_t* cmdID, uint8_t* args, size_t* len, uint32_t* index);
+int getNextCommand(usqlite_connection_t* self, uint8_t* cmdID, uint8_t** args, size_t* len, uint32_t* index);
 
 
 /**
@@ -248,7 +248,7 @@ int deletePayloadDataPos(usqlite_connection_t* self, double pos[3]);
  *
  * @return status
  */
-int createUplink(usqlite_connection_t* self, uint32_t txID, uint32_t txSize, uint32_t numPackets, uint8_t* missing, uint32_t missingSize);
+int createUplink(usqlite_connection_t* self, uint32_t txID, uint32_t txSize, uint32_t numPackets);
 
 
 /**
@@ -278,13 +278,14 @@ int deleteUplink(usqlite_connection_t* self, uint32_t uplinkID);
  * @brief Add new downlink in he database
  *
  * @param self: usqlite connection object with database info
- * @param downlinkID: Unique identifier for the downlink
- * @param data: raw bytes for the transmission
- * @param len: number of bytes for the transmission
+ * @param data: raw bytes for the data portion of the transmission
+ * @param len: number of bytes for the data portion of the transmission
+ * @param numPackets: number of packets in the transmission
+ * @param priority: how high of a prioirty to downlink lower numbers get downlinked sooner.
  *
- * @return status
+ * @return dbid of the transmission 
  */
-int createDownlink(usqlite_connection_t* self, uint32_t downlinkID, uint8_t* data, size_t len);
+int createDownlink(usqlite_connection_t* self, uint8_t* data, size_t len, size_t numPackets, int priority);
 
 
 /**
@@ -351,7 +352,7 @@ int clearTable(usqlite_connection_t* self, char* tableName);
 
 
 
-int getMissingPacketIds(usqlite_connection_t* self, uint32_t txID, uint8_t* packetIDs, size_t* len);
+int getMissingPacketIds(usqlite_connection_t* self, uint32_t txID, uint32_t** packetIDs, size_t* len);
 
 
 /**
@@ -382,4 +383,45 @@ int fetchDataBlob(usqlite_connection_t* self, const char* tableName, uint32_t ro
  * @return status
  */
 int writeDataBlob(usqlite_connection_t* self, const char* tableName, uint32_t rowID, uint8_t* data, size_t len, size_t offset);
+
+
+
+/**
+ * @brief Create entry in payload table of database with empty blob given size of expected data.
+ * If payload size is larger than available ram this method should be called first, then as payload
+ * data is read, call writeDataBlob() specifying the id returned by createEmptyPayloadEntry()
+ * and write the data incrementally into the database
+ *
+ * @param self usqlite connecion object
+ * @param dataLen: length of data expected for the payload.
+ * @param pos[3]: position of the experiment
+ * @param timestamp: timestamp of the experiment
+ *
+ * @return database id of the entry to be used for blob writing
+ */
+int createEmptyPayloadEntry(usqlite_connection_t* self, size_t dataLen, double pos[3], uint32_t timestamp);
+
+
+
+
+/**
+ * @brief Set the value at the given packet id of the missing bitset.
+ *
+ * @param self: usqlite connection object
+ * @param rowID: tx id of the uplink
+ * @param packetID: id of the packet within the transmission
+ * @param val: value to set
+ *
+ * @return status
+ */
+int setUplinkPacketReceived(usqlite_connection_t* self, uint32_t rowID, uint32_t packetID, uint8_t val);
+
+
+
+
+
+
+
+
+
 #endif //DATABASE_INTERFACE_H
