@@ -49,41 +49,39 @@ int executeStmtNoReturn(usqlite_cursor_t* self);
  * @brief Insert bytes into soh table
  *
  * @param self: usqlite connection object with database info
- * @param sohEnum: unsinged integer corresponding to appropriate soh subsystem
+ * @param timestamp: unsinged integer unix timestamp
  * @param data: pointer to raw soh struct bytes
  * @param len: number of bytes to write
  *
  * @return status
  */
-int insertSoh(usqlite_connection_t* self, uint8_t sohEnum, uint8_t* data, size_t len);
+int insertSoh(usqlite_connection_t* self, uint32_t timestamp, uint8_t* data, size_t len);
 
 
 /**
  * @brief Return soh
  *
  * @param self: usqlite connection object with database info
- * @param sohEnum: enum correspoding to appropriate soh subsystem
  * @param index: index of soh entry, negative entries work relative to most recent
  * @param data: output soh bytes
  * @param len: number of bytes written to data
  *
  * @return status
  */
-int fetchSoh(usqlite_connection_t* self, uint8_t sohEnum, uint32_t index, uint8_t* data, size_t* len);
+int fetchSoh(usqlite_connection_t* self, uint32_t index, uint8_t** data, size_t* len);
 
 
 /**
  * @brief Return soh by timestamp
  *
  * @param self: usqlite connection object with database info
- * @param sohEnum: enum corresponding to appropriate soh subsystem
  * @param timestamp: timestamp of desired soh entry
  * @param data: output soh bytes
  * @param len: number of bytes written to data
  *
  * @return status
  */
-int fetchSohTimestamp(usqlite_connection_t* self, uint8_t sohEnum, uint32_t timeStart, uint32_t timeEnd, uint8_t* data, size_t* len);
+int fetchSohTimestamp(usqlite_connection_t* self, uint32_t timeStart, uint32_t timeEnd, uint8_t** data, size_t* len);
 
 
 /**
@@ -268,10 +266,11 @@ int insertUplinkPacket(usqlite_connection_t* self,uint32_t txID, uint32_t packet
  *
  * @param self: usqlite connection object with database info
  * @param uplinkID: ID to search for and delete
+ * @param tableName: name of table to delete from
  *
  * @return status
  */
-int deleteUplink(usqlite_connection_t* self, uint32_t uplinkID);
+int deleteEntry(usqlite_connection_t* self, uint32_t ID, const char* tableName);
 
 
 /**

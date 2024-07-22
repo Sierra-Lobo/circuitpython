@@ -88,22 +88,14 @@ status initializeDatabase(usqlite_connection_t* self)
 
 }
 
-int insertSoh(usqlite_connection_t* self, uint8_t sohEnum, uint8_t* data, size_t len) {
-	//not real just for test vvv
-	sqlite3_blob* blob;
-	uint32_t TXID = 1;
-	int ec = sqlite3_blob_open( self->db, "main", "downlinks", "data", TXID, 1, &blob );
-	ec = sqlite3_blob_write(blob, data, len, 0);
-	sqlite3_blob_close(blob);
-
-	uint8_t* addr;
-	size_t length = 0;
-	int prot = 0;
-	int flags = 0;
-	int fd = 0;
-	int offset = 0;
-	return ec;
-	//end not real just for test ^^^
+int insertSoh(usqlite_connection_t* self, uint32_t timestamp, uint8_t* data, size_t len) {
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, insert_soh);
+	sqlite3_bind_int64(cursor.stmt, 1, timestamp);
+	sqlite3_bind_blob(cursor.stmt, 2, data, len, SQLITE_TRANSIENT);
+	stepExecute(&cursor);
+	return SUCCESS; 
+	
 }
 
 
@@ -114,27 +106,26 @@ int insertSoh(usqlite_connection_t* self, uint8_t sohEnum, uint8_t* data, size_t
 
 
 
-//TODO make sure negatie indicies work
-int fetchSoh(usqlite_connection_t* self, uint8_t sohEnum, uint32_t index, uint8_t* data, size_t* len) {
+int fetchSoh(usqlite_connection_t* self, uint32_t index, uint8_t** data, size_t* len) {
 
 	usqlite_cursor_t cursor;
 	createStatement(self, &cursor, query_soh_index);
 	sqlite3_bind_int64(cursor.stmt, 1, index);
 	stepExecute(&cursor);
 	uint32_t timestamp = sqlite3_column_int64(cursor.stmt, 0);
-	getBlob(&cursor, 1, &data, len);	
-	return timestamp; //?
+	getBlob(&cursor, 1, data, len);	
+	return timestamp; 
 }
 
-int fetchSohTimestamp(usqlite_connection_t* self, uint8_t sohEnum, uint32_t timeStart, uint32_t timeEnd, uint8_t* data, size_t* len) {
+int fetchSohTimestamp(usqlite_connection_t* self, uint32_t timeStart, uint32_t timeEnd, uint8_t** data, size_t* len) {
 	usqlite_cursor_t cursor;
 	createStatement(self, &cursor, query_soh_time);
 	sqlite3_bind_int64(cursor.stmt, 1, timeStart);
 	sqlite3_bind_int64(cursor.stmt, 2, timeEnd);
 	stepExecute(&cursor);
 	uint32_t timestamp = sqlite3_column_int64(cursor.stmt, 0);
-	getBlob(&cursor, 1, &data, len);	
-	return timestamp; //?
+	getBlob(&cursor, 1, data, len);	
+	return timestamp; 
 
 }
 
@@ -303,14 +294,13 @@ int insertUplinkPacket(usqlite_connection_t* self,uint32_t txID, uint32_t packet
 }
 */
 
-int deleteUplink(usqlite_connection_t* self, uint32_t uplinkID) {
+int deleteEntry(usqlite_connection_t* self, uint32_t ID, const char* tableName) {
 	usqlite_cursor_t cursor;
 	createStatement(self, &cursor, delete_uplink);
-	sqlite3_bind_int64(cursor.stmt, 1, uplinkID);
+	sqlite3_bind_int64(cursor.stmt, 1, ID);
+	sqlite3_bind_text(cursor.stmt, 2, tableName, strlen(tableName), SQLITE_TRANSIENT);
 	stepExecute(&cursor);
 	return SUCCESS; 
-
-
 }
 
 
@@ -397,3 +387,20 @@ int setUplinkPacketReceived(usqlite_connection_t* self, uint32_t rowID, uint32_t
 
 }
 
+int insertConfig(usqlite_connection_t* self, uint8_t* data, size_t len)
+{
+
+
+}
+
+int fetchConfig(usqlite_connection_t* self, uint8_t* data, size_t len)
+{
+
+
+}
+
+int deleteConfig(usqlite_connection_t* self)
+{
+
+
+}

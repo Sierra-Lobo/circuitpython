@@ -44,12 +44,13 @@ mp_obj_t usqlite_writeDataBlob(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_getMissingPacketIds(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_getMissingPacketIds1(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_setUplinkPacketReceived(size_t n_args, const mp_obj_t* args);
+mp_obj_t usqlite_deleteEntry(size_t n_args, const mp_obj_t* args);
 
 
 MP_DEFINE_CONST_FUN_OBJ_1(usqlite_initializeDatabase_obj, usqlite_initializeDatabase);
 
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_insertSoh_obj, 3, 3 ,usqlite_insertSoh);
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_fetchSoh_obj, 3, 3 ,usqlite_fetchSoh);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_fetchSoh_obj, 3, 4 ,usqlite_fetchSoh);
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_logEvent_obj, 5, 5 ,usqlite_logEvent);
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_insertCommand_obj, 4, 4 ,usqlite_insertCommand);
 MP_DEFINE_CONST_FUN_OBJ_1(usqlite_getNextCommand_obj, usqlite_getNextCommand);
@@ -62,6 +63,7 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_fetchDataBlobInto_obj, 6, 6 ,usqlite
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_writeDataBlob_obj, 6, 6 ,usqlite_writeDataBlob);
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_getMissingPacketIds_obj,2,2, usqlite_getMissingPacketIds);
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_setUplinkPacketReceived_obj, 3, 4 ,usqlite_setUplinkPacketReceived);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_deleteEntry_obj, 3, 4 ,usqlite_deleteEntry);
 
 
 STATIC mp_obj_t usqlite_connection_close(mp_obj_t self_in);
@@ -322,6 +324,7 @@ STATIC const mp_rom_map_elem_t usqlite_connection_locals_dict_table[] =
 	{ MP_ROM_QSTR(MP_QSTR_writeDataBlob),  MP_ROM_PTR(&usqlite_writeDataBlob_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_getMissingPacketIds),  MP_ROM_PTR(&usqlite_getMissingPacketIds_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_setUplinkPacketReceived),  MP_ROM_PTR(&usqlite_setUplinkPacketReceived_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_deleteEntry),  MP_ROM_PTR(&usqlite_deleteEntry_obj) },
 };
 
 MP_DEFINE_CONST_DICT(usqlite_connection_locals_dict, usqlite_connection_locals_dict_table);

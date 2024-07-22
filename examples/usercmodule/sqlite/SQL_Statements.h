@@ -493,6 +493,28 @@
    */
   #define delete_soh \
       "DELETE FROM soh WHERE time <= ?2 AND time >= ?1;"
+  
+/**
+   * @brief Delete all SOH data given id 
+   *
+   * The delete is inclusive -- Any SOH with the given timestamp will be deleted.
+   *
+   * @author Owen DelBene
+   * 6/8/2024
+   *
+   * @param ?1 The UNIX timestamp of the newest SOH to delete.
+   */
+  #define delete_soh_id \
+      "DELETE FROM soh WHERE id=?1;"
+
+/**
+ * @brief Delete entry from table specified by tableName and index
+ *
+ * @author Owen DelBene
+ * 7/21/2024
+ */
+  #define delete_from_table \
+	  "DELETE FROM ?1 WHERE id=?2;"
 
   /**
    * @brief Delete the oldest downlink (the one least recently downlinked) and

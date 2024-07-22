@@ -54,6 +54,10 @@ def test_uplinks(con):
     for packet_id in missing_ids:
         con.setUplinkPacketReceived(txID, packetID)
 
+    #to test
+    #deleteUplink()
+
+
 def test_events(con):
 
     severity = 1
@@ -64,6 +68,34 @@ def test_events(con):
 
 
 
+def test_downlinks(con):
+    #to test
+    #createDownlink
+    #writeDataBlob
+    #fetchDownlink
+    #readDataBlobInto
+    #deleteDownlink
+
+
+def test_payload(con):
+    #createEmptyPayloadEntry
+    #insertPayloadData
+    #fetchPayloadDataID
+    #fetchPayloadDataTime
+    #fetchPayloadDataPos
+    #deletePayloadDataID
+
+def test_config(con):
+    #createConfig
+    #fetchConfig
+    #deleteConfig
+
+
+def test_soh(con):
+    #insertSoh
+    #fetchSoh
+    #fetchSohTimestamp
+    #deleteSoh
 
 if __name__ == "__main__":
 

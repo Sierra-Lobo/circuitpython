@@ -16,6 +16,7 @@ mp_obj_t usqlite_fetchDataBlobInto(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_writeDataBlob(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_setUplinkPacketReceived(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_getMissingPacketIds(size_t n_args, const mp_obj_t* args);
+mp_obj_t usqlite_deleteEntry(size_t n_args, const mp_obj_t* args);
 
 
 
@@ -30,10 +31,10 @@ mp_obj_t usqlite_getMissingPacketIds(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_insertSoh(size_t n_args, const mp_obj_t* args)
 {
 	usqlite_connection_t* self = MP_OBJ_TO_PTR(args[0]);
-	uint8_t sohEnum = mp_obj_get_int(args[1]);
+	uint32_t sohTimestamp = mp_obj_get_int(args[1]);
 	mp_buffer_info_t bufinfo;
 	mp_get_buffer(args[2], &bufinfo, MP_BUFFER_READ);
-	int ec = insertSoh(self, sohEnum, bufinfo.buf, bufinfo.len);
+	int ec = insertSoh(self, sohTimestamp, bufinfo.buf, bufinfo.len);
 	return mp_obj_new_int(ec);
 }
 
@@ -57,44 +58,30 @@ mp_obj_t usqlite_initializeDatabase(mp_obj_t self_in)
  * @brief Fetch soh from the database, either specify start/end times or specific index
  * def fetchSoh(self, sohEnum, index, start_time=None, end_time=None):
  *
- * @param sohEnum: integer required 
  * @param index: integer, negative indicies supported, required if start/end times not present
  * @param start_time: time to start search for soh enum
  * @param stop_time: time to stop search for soh enum
  *
  * @return bytes object containg soh entry 
  */
-mp_obj_t usqlite_fetchSoh(size_t n_args,size_t n_kw, const mp_obj_t* args)
+mp_obj_t usqlite_fetchSoh(size_t n_args,const mp_obj_t* args)
 {
-	
-	enum {ARG_self, ARG_soh, ARG_index, ARG_startTime, ARG_endTime, NUM_ARGS};
-	static const mp_arg_t allowed_args[] = {
-		{MP_QSTR_self, MP_ARG_OBJ, {.u_obj = mp_const_none}},
-		{MP_QSTR_sohEnum, MP_ARG_INT, {.u_int = 0}},
-		{MP_QSTR_index, MP_ARG_INT, {.u_int = 0}},
-		{MP_QSTR_start_time, MP_ARG_INT, {.u_int = 0}},
-		{MP_QSTR_end_time, MP_ARG_INT, {.u_int = 0}},
-	};
-	
-	mp_arg_val_t arg_vals[MP_ARRAY_SIZE(allowed_args)];
-	mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, arg_vals);
-	
-	
 	usqlite_connection_t* self = MP_OBJ_TO_PTR(args[0]);
-	uint8_t sohEnum = arg_vals[ARG_soh].u_int;
-	uint32_t index = arg_vals[ARG_index].u_int;
-	uint32_t timeStart = arg_vals[ARG_startTime].u_int;
-	uint32_t timeStop  = arg_vals[ARG_endTime].u_int;
+	uint32_t index = mp_obj_get_int(args[1]);
+	uint32_t timeStart = 0;
+	uint32_t timeStop = 0;
+	if (n_args > 2) timeStart = mp_obj_get_int(args[2]);
+	if (n_args > 3) timeStop  = mp_obj_get_int(args[3]);
 
 
 	uint8_t* data;
 	size_t len;
 	
 	if ((timeStart == 0) && (timeStop == 0)) {
-		int ret = fetchSoh(self, sohEnum, handleNegativeIndex(self, "soh", index), data, &len);
+		int ret = fetchSoh(self, handleNegativeIndex(self, "soh", index), &data, &len);
 	}
 	else {
-		int ret = fetchSohTimestamp(self, sohEnum, timeStart, timeStop, data, &len);
+		int ret = fetchSohTimestamp(self, timeStart, timeStop, &data, &len);
 	}
 	return mp_obj_new_bytearray(len, data);
 }
@@ -397,15 +384,15 @@ mp_obj_t usqlite_fetchDataBlobInto(size_t n_args, const mp_obj_t* args)
 
 
 //possibly put all delete commands in one and use kwargs to select right thing
-/*
-mp_obj_t usqlite_deleteUplink(mp_obj_t self_in, mp_obj_t index)
-{
-	usqlite_connection_t* self = MP_OBJ_TO_PTR(self_in);
-	uint32_t id = mp_obj_get_int(index);
 
-	return mp_obj_get_int(deleteUplink(self, id));
+mp_obj_t usqlite_deleteEntry(size_t n_args, const mp_obj_t* args)
+{
+	usqlite_connection_t* self = MP_OBJ_TO_PTR(args[0]);
+	uint32_t id = mp_obj_get_int(args[1]);
+	const char* tableName = mp_obj_str_get_str(args[2]);
+	return mp_obj_get_int(deleteEntry(self, id, tableName));
 }
-*/
+
 
 /**
  * @brief Write data from a bytes-like object into a blob
