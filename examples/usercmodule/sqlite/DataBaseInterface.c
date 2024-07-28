@@ -189,6 +189,7 @@ int insertPayloadData(usqlite_connection_t* self, uint8_t* data, size_t len,  do
 	sqlite3_bind_blob(cursor.stmt, 2, pos, 3 * sizeof(double), SQLITE_TRANSIENT);
 	sqlite3_bind_blob(cursor.stmt, 3, data, len, SQLITE_TRANSIENT);
 	stepExecute(&cursor);
+	stepExecute(&cursor);
 	return getInt(&cursor, 0); 
 
 }
@@ -202,11 +203,12 @@ int createEmptyPayloadEntry(usqlite_connection_t* self, size_t dataLen, double p
 	sqlite3_bind_blob(cursor.stmt, 2, pos, 3 * sizeof(double), SQLITE_TRANSIENT);
 	sqlite3_bind_int64(cursor.stmt, 3, dataLen);
 	stepExecute(&cursor);
+	stepExecute(&cursor);
 	return getInt(&cursor, 0);
 }
 
 
-int fetchPayloadDataID(usqlite_connection_t* self, uint32_t index, uint8_t* data, size_t* len, double pos[3], uint32_t* timestamp) {
+int fetchPayloadDataID(usqlite_connection_t* self, uint32_t index, uint8_t** data, size_t* len, uint8_t** pos, uint32_t* timestamp) {
 
 
 	usqlite_cursor_t cursor;
@@ -214,13 +216,13 @@ int fetchPayloadDataID(usqlite_connection_t* self, uint32_t index, uint8_t* data
 	sqlite3_bind_int64(cursor.stmt, 1, index);
 	stepExecute(&cursor);
 	*timestamp = sqlite3_column_int64(cursor.stmt, 0);
-	getBlob(&cursor, 1, &data, len);
+	getBlob(&cursor, 1, data, len);
 	size_t poslen;	
-	getBlob(&cursor, 2, &pos, &poslen);	
+	getBlob(&cursor, 2, pos, &poslen);	
 	return SUCCESS; //?
 }
 
-int fetchPayloadDataTime(usqlite_connection_t* self, uint32_t* index, uint8_t* data,size_t* len,  double pos[3], uint32_t* timeStart, uint32_t* timeStop) {
+int fetchPayloadDataTime(usqlite_connection_t* self, uint32_t* index, uint8_t** data,size_t* len,  uint8_t** pos, uint32_t* timeStart, uint32_t* timeStop) {
 
 	usqlite_cursor_t cursor;
 	createStatement(self, &cursor, query_payload_time);
@@ -228,9 +230,9 @@ int fetchPayloadDataTime(usqlite_connection_t* self, uint32_t* index, uint8_t* d
 	sqlite3_bind_int64(cursor.stmt, 2, *timeStop);
 	stepExecute(&cursor);
 	*timeStart= sqlite3_column_int64(cursor.stmt, 0);
-	getBlob(&cursor, 1, &data, len);
+	getBlob(&cursor, 1, data, len);
 	size_t poslen;	
-	getBlob(&cursor, 2, &pos, &poslen);	
+	getBlob(&cursor, 2, pos, &poslen);	
 	return SUCCESS; //?
 	
 }
@@ -296,9 +298,14 @@ int insertUplinkPacket(usqlite_connection_t* self,uint32_t txID, uint32_t packet
 
 int deleteEntry(usqlite_connection_t* self, uint32_t ID, const char* tableName) {
 	usqlite_cursor_t cursor;
-	createStatement(self, &cursor, delete_uplink);
+	if (strcmp(tableName, "configs") ==0) createStatement(self, &cursor, delete_config);
+	if (strcmp(tableName, "commands") ==0) createStatement(self, &cursor, delete_command);
+	if (strcmp(tableName, "soh") ==0) createStatement(self, &cursor, delete_soh_id);
+	if (strcmp(tableName, "downlinks") ==0) createStatement(self, &cursor, delete_downlink_id);
+	if (strcmp(tableName, "uplinks") ==0) createStatement(self, &cursor, delete_uplink_id);
+	if (strcmp(tableName, "events") ==0) createStatement(self, &cursor, delete_event);
+	if (strcmp(tableName, "payload") ==0) createStatement(self, &cursor, delete_payload);
 	sqlite3_bind_int64(cursor.stmt, 1, ID);
-	sqlite3_bind_text(cursor.stmt, 2, tableName, strlen(tableName), SQLITE_TRANSIENT);
 	stepExecute(&cursor);
 	return SUCCESS; 
 }
@@ -310,13 +317,50 @@ int createDownlink(usqlite_connection_t* self, uint8_t* data, size_t len, size_t
 	createStatement(self, &cursor, insert_downlink);
 	sqlite3_bind_blob(cursor.stmt, 1, data, len, SQLITE_TRANSIENT); 
 	sqlite3_bind_int(cursor.stmt, 2, priority);
-	sqlite3_bind_int(cursor.stmt, 3, ( numPackets / 8 ) + ( numPackets % 8 > 0 ));
+	
+	sqlite3_bind_blob(cursor.stmt, 3, data, len, SQLITE_TRANSIENT); 
+	//sqlite3_bind_int(cursor.stmt, 3, ( numPackets / 8 ) + ( numPackets % 8 > 0 ));
 	sqlite3_bind_int(cursor.stmt, 4, numPackets);
+	stepExecute(&cursor);
 	stepExecute(&cursor);
 	size_t dbid = getInt(&cursor, 0);
 	return dbid;
 }
 
+int createDownlinkEmpty(usqlite_connection_t* self, size_t len, size_t numPackets, int priority) {
+	
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, insert_downlink_empty);
+	sqlite3_bind_int(cursor.stmt, 1, len); 
+	sqlite3_bind_int(cursor.stmt, 2, priority);
+	sqlite3_bind_int(cursor.stmt, 3, ( numPackets / 8 ) + ( numPackets % 8 > 0 ));
+	sqlite3_bind_int(cursor.stmt, 4, numPackets);
+	stepExecute(&cursor);
+	stepExecute(&cursor);
+	size_t dbid = getInt(&cursor, 0);
+	return dbid;
+}
+
+
+int getNextDownlink(usqlite_connection_t* self, uint8_t** data, size_t* len, uint32_t* index) {
+
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, query_downlink);
+	stepExecute(&cursor);
+	*index = getInt(&cursor, 0);
+	getBlob(&cursor, 1, data, len);
+	return SUCCESS; 
+
+}
+
+int getNextDownlinkID(usqlite_connection_t* self, uint32_t* index) {
+
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, query_downlink_id);
+	stepExecute(&cursor);
+	*index = getInt(&cursor, 0);
+	return SUCCESS; 
+}
 
 int getMissingPacketIds(usqlite_connection_t* self, uint32_t txID, uint32_t** packetIDs, size_t* len)
 {
@@ -389,18 +433,26 @@ int setUplinkPacketReceived(usqlite_connection_t* self, uint32_t rowID, uint32_t
 
 int insertConfig(usqlite_connection_t* self, uint8_t* data, size_t len)
 {
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, insert_config);
+	sqlite3_bind_blob(cursor.stmt, 1, data, len, SQLITE_TRANSIENT);
+	stepExecute(&cursor);
+	return SUCCESS; 
 
 
 }
 
-int fetchConfig(usqlite_connection_t* self, uint8_t* data, size_t len)
+int fetchConfig(usqlite_connection_t* self, uint32_t index, uint8_t* data, size_t len)
 {
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, query_config_index);
+	sqlite3_bind_int64(cursor.stmt, 1, index);
+	stepExecute(&cursor);
+	getBlob(&cursor, 0, data, len);	
+	return SUCCESS; 
 
 
 }
 
-int deleteConfig(usqlite_connection_t* self)
-{
 
 
-}

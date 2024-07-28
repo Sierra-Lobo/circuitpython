@@ -33,7 +33,7 @@
    */
   #define create_config  \
       "CREATE TABLE configs("\
-      "id INTEGER PRIMARY KEY,"\
+      "id INTEGER PRIMARY KEY AUTOINCREMENT,"\
       "data BLOB NOT NULL);"
 
   /**
@@ -71,10 +71,10 @@
   #define create_downlinks  \
       "CREATE TABLE downlinks("\
       "id INTEGER PRIMARY KEY AUTOINCREMENT,"\
+      "data BLOB NOT NULL," \
       "priority INTEGER NOT NULL,"\
-      "npackets INTEGER NOT NULL,"\
       "sent BLOB NOT NULL,"\
-      "data BLOB NOT NULL);"
+      "npackets INTEGER NOT NULL);"
 
   /**
    * @brief Create the uplinks table
@@ -189,6 +189,24 @@
   #define query_soh_index \
       "SELECT time, data FROM soh WHERE id =?1;"
 
+
+
+  /**
+   * @brief Query all config data given an index 
+   *
+   * @author Owen DelBene
+   * 6/8/2024
+   *
+   * @param ?1 The UNIX timestamp to fetch
+   *
+   * @return The time and SOH data for all SOHs occurring at or after the given
+   * time
+   */
+  #define query_config_index \
+      "SELECT data FROM configs WHERE id =?1;"
+
+
+
   /**
    * @brief Query all payload data between two time intervals 
    *
@@ -259,8 +277,7 @@
 
   #define query_downlink_id \
       "SELECT MIN(id) FROM downlinks "\
-      "WHERE priority = (SELECT MAX(priority) FROM downlinks) AND "\
-      "AllBitsSet(npackets, sent) = 0;"
+      "WHERE priority = (SELECT MAX(priority) FROM downlinks)" 
 
   /**
    * @brief Query the missing packets bitset from an uplink
@@ -373,6 +390,17 @@
   #define insert_soh \
       "INSERT INTO soh(time, data) VALUES(?1, ?2);"
 
+  /**
+   * @brief Insert a config into database
+   *
+   * @author Owen DelBene
+   * 6/8/2024
+   *
+   * @param ?1 The UNIX timestamp of the soh 
+   * @param ?2 The SOH Data blob
+   */
+  #define insert_config \
+      "INSERT INTO configs(data) VALUES(?1);"
 
   /**
    * @brief Insert a downlink into the database
@@ -385,13 +413,17 @@
    */
   #define insert_downlink \
       "INSERT INTO downlinks(data, priority, sent, npackets) VALUES(?1, ?2, "\
-      "zeroblob(?3), ?4) returning id;"
+      "?3, ?4) returning id;"
 
   #define get_downlink_sent \
       "SELECT npackets, sent FROM downlinks WHERE id = ?1;"
 
   #define set_downlink_sent \
       "UPDATE downlinks SET sent = ?1 WHERE id = ?2;"
+
+  #define insert_downlink_empty \
+      "INSERT INTO downlinks(data, priority, sent, npackets) VALUES(zeroblob(?1), ?2, "\
+      "zeroblob(?3), ?4) returning id;"
 
 
   /**
@@ -505,7 +537,7 @@
    * @param ?1 The UNIX timestamp of the newest SOH to delete.
    */
   #define delete_soh_id \
-      "DELETE FROM soh WHERE id=?1;"
+      "DELETE FROM SOH WHERE id=?1;"
 
 /**
  * @brief Delete entry from table specified by tableName and index
@@ -560,3 +592,8 @@
   #define delete_all_uplinks \
       "DELETE FROM uplinks;"
 
+	#define delete_config \
+		"DELETE FROM configs WHERE id=?1;"
+
+	#define delete_event \
+		"DELETE FROM events WHERE id=?1;"

@@ -167,7 +167,7 @@ int insertPayloadData(usqlite_connection_t* self, uint8_t* data, size_t len,  do
  *
  * @return status
  */
-int fetchPayloadDataID(usqlite_connection_t* self, uint32_t index, uint8_t* data, size_t* len, double pos[3], uint32_t* timestamp);
+int fetchPayloadDataID(usqlite_connection_t* self, uint32_t index, uint8_t** data, size_t* len, uint8_t** pos, uint32_t* timestamp);
 
 
 /**
@@ -183,7 +183,7 @@ int fetchPayloadDataID(usqlite_connection_t* self, uint32_t index, uint8_t* data
  *
  * @return status
  */
-int fetchPayloadDataTime(usqlite_connection_t* self, uint32_t* index, uint8_t* data, size_t* len, double pos[3], uint32_t* timestamp, uint32_t* timeStop);
+int fetchPayloadDataTime(usqlite_connection_t* self, uint32_t* index, uint8_t** data, size_t* len, uint8_t** pos, uint32_t* timestamp, uint32_t* timeStop);
 
 
 /**
@@ -286,6 +286,7 @@ int deleteEntry(usqlite_connection_t* self, uint32_t ID, const char* tableName);
  */
 int createDownlink(usqlite_connection_t* self, uint8_t* data, size_t len, size_t numPackets, int priority);
 
+int createDownlinkEmpty(usqlite_connection_t* self, size_t len, size_t numPackets, int priority);
 
 /**
  * @brief Return downlink specified by the downlink ID
@@ -418,9 +419,13 @@ int setUplinkPacketReceived(usqlite_connection_t* self, uint32_t rowID, uint32_t
 
 
 
+int getNextDownlink(usqlite_connection_t* self, uint8_t** data, size_t* len, uint32_t* index);
+
+int getNextDownlinkID(usqlite_connection_t* self, uint32_t* index); 
 
 
-
+int insertConfig(usqlite_connection_t* self, uint8_t* data, size_t len);
+int fetchConfig(usqlite_connection_t* self, uint32_t index, uint8_t* data, size_t len);
 
 
 #endif //DATABASE_INTERFACE_H

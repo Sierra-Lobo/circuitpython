@@ -30,13 +30,13 @@ SOFTWARE.
 //database interface funcs
 mp_obj_t usqlite_insertSoh(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_initializeDatabase(mp_obj_t self_in);
-mp_obj_t usqlite_fetchSoh(size_t n_args,size_t n_kw, const mp_obj_t* args);
+mp_obj_t usqlite_fetchSoh(size_t n_args,const mp_obj_t* args);
 mp_obj_t usqlite_logEvent(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_insertCommand(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_getNextCommand(mp_obj_t self_in);
 mp_obj_t usqlite_deleteCommand(mp_obj_t self_in, mp_obj_t index);
 mp_obj_t usqlite_insertPayloadData(size_t n_args, const mp_obj_t* args);
-mp_obj_t usqlite_fetchPayloadData(size_t n_args,size_t n_kw, const mp_obj_t* args);
+mp_obj_t usqlite_fetchPayloadData(size_t n_args,const mp_obj_t* args);
 mp_obj_t usqlite_deletePayloadDataID(mp_obj_t self_in, mp_obj_t index);
 mp_obj_t usqlite_createUplink(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_fetchDataBlobInto(size_t n_args, const mp_obj_t* args);
@@ -45,17 +45,23 @@ mp_obj_t usqlite_getMissingPacketIds(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_getMissingPacketIds1(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_setUplinkPacketReceived(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_deleteEntry(size_t n_args, const mp_obj_t* args);
+mp_obj_t usqlite_insertConfig(size_t n_args, const mp_obj_t* args);
+mp_obj_t usqlite_fetchConfig(size_t n_args, const mp_obj_t* args);
+mp_obj_t usqlite_getNextDownlinkID(mp_obj_t self_in);
+mp_obj_t usqlite_getNextDownlink(mp_obj_t self_in);
+mp_obj_t usqlite_createDownlink(size_t n_args, const mp_obj_t* args);
+mp_obj_t usqlite_createDownlinkEmpty(size_t n_args, const mp_obj_t* args);
 
 
 MP_DEFINE_CONST_FUN_OBJ_1(usqlite_initializeDatabase_obj, usqlite_initializeDatabase);
 
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_insertSoh_obj, 3, 3 ,usqlite_insertSoh);
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_fetchSoh_obj, 3, 4 ,usqlite_fetchSoh);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_fetchSoh_obj, 2, 4 ,usqlite_fetchSoh);
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_logEvent_obj, 5, 5 ,usqlite_logEvent);
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_insertCommand_obj, 4, 4 ,usqlite_insertCommand);
 MP_DEFINE_CONST_FUN_OBJ_1(usqlite_getNextCommand_obj, usqlite_getNextCommand);
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_deleteCommand_obj,2,2, usqlite_deleteCommand);
-MP_DEFINE_CONST_FUN_OBJ_KW(usqlite_insertPayloadData_obj, 4 ,usqlite_insertPayloadData);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_insertPayloadData_obj, 4, 5 ,usqlite_insertPayloadData);
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_fetchPayloadData_obj,2, 3,  usqlite_fetchPayloadData);
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_deletePayloadDataID_obj,2,2, usqlite_deletePayloadDataID);
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_createUplink_obj, 4, 4 ,usqlite_createUplink);
@@ -64,6 +70,15 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_writeDataBlob_obj, 6, 6 ,usqlite_wri
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_getMissingPacketIds_obj,2,2, usqlite_getMissingPacketIds);
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_setUplinkPacketReceived_obj, 3, 4 ,usqlite_setUplinkPacketReceived);
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_deleteEntry_obj, 3, 4 ,usqlite_deleteEntry);
+
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_insertConfig_obj, 2, 3 ,usqlite_insertConfig);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_fetchConfig_obj, 2, 3 ,usqlite_fetchConfig);
+
+MP_DEFINE_CONST_FUN_OBJ_1(usqlite_getNextDownlink_obj, usqlite_getNextDownlink);
+MP_DEFINE_CONST_FUN_OBJ_1(usqlite_getNextDownlinkID_obj, usqlite_getNextDownlinkID);
+
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_createDownlink_obj, 1, 5 ,usqlite_createDownlink);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_createDownlinkEmpty_obj, 1, 5 ,usqlite_createDownlinkEmpty);
 
 
 STATIC mp_obj_t usqlite_connection_close(mp_obj_t self_in);
@@ -325,6 +340,12 @@ STATIC const mp_rom_map_elem_t usqlite_connection_locals_dict_table[] =
 	{ MP_ROM_QSTR(MP_QSTR_getMissingPacketIds),  MP_ROM_PTR(&usqlite_getMissingPacketIds_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_setUplinkPacketReceived),  MP_ROM_PTR(&usqlite_setUplinkPacketReceived_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_deleteEntry),  MP_ROM_PTR(&usqlite_deleteEntry_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_insertConfig),  MP_ROM_PTR(&usqlite_insertConfig_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_fetchConfig),  MP_ROM_PTR(&usqlite_fetchConfig_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_getNextDownlink),  MP_ROM_PTR(&usqlite_getNextDownlink_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_getNextDownlinkID),  MP_ROM_PTR(&usqlite_getNextDownlinkID_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_createDownlink),  MP_ROM_PTR(&usqlite_createDownlink_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_createDownlinkEmpty),  MP_ROM_PTR(&usqlite_createDownlinkEmpty_obj) },
 };
 
 MP_DEFINE_CONST_DICT(usqlite_connection_locals_dict, usqlite_connection_locals_dict_table);

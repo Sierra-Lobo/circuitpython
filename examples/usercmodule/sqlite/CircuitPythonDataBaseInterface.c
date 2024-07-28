@@ -3,13 +3,13 @@
 
 mp_obj_t usqlite_insertSoh(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_initializeDatabase(mp_obj_t self_in);
-mp_obj_t usqlite_fetchSoh(size_t n_args,size_t n_kw, const mp_obj_t* args);
+mp_obj_t usqlite_fetchSoh(size_t n_args,const mp_obj_t* args);
 mp_obj_t usqlite_logEvent(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_insertCommand(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_getNextCommand(mp_obj_t self_in);
 mp_obj_t usqlite_deleteCommand(mp_obj_t self_in, mp_obj_t index);
-mp_obj_t usqlite_insertPayloadData(size_t n_args, size_t n_kw, const mp_obj_t* args);
-mp_obj_t usqlite_fetchPayloadData(size_t n_args,size_t n_kw, const mp_obj_t* args);
+mp_obj_t usqlite_insertPayloadData(size_t n_args, const mp_obj_t* args);
+mp_obj_t usqlite_fetchPayloadData(size_t n_args,const mp_obj_t* args);
 mp_obj_t usqlite_deletePayloadDataID(mp_obj_t self_in, mp_obj_t index);
 mp_obj_t usqlite_createUplink(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_fetchDataBlobInto(size_t n_args, const mp_obj_t* args);
@@ -17,13 +17,18 @@ mp_obj_t usqlite_writeDataBlob(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_setUplinkPacketReceived(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_getMissingPacketIds(size_t n_args, const mp_obj_t* args);
 mp_obj_t usqlite_deleteEntry(size_t n_args, const mp_obj_t* args);
-
+mp_obj_t usqlite_insertConfig(size_t n_args, const mp_obj_t* args);
+mp_obj_t usqlite_fetchConfig(size_t n_args, const mp_obj_t* args);
+mp_obj_t usqlite_getNextDownlinkID(mp_obj_t self_in);
+mp_obj_t usqlite_getNextDownlink(mp_obj_t self_in);
+mp_obj_t usqlite_createDownlink(size_t n_args, const mp_obj_t* args);
+mp_obj_t usqlite_createDownlinkEmpty(size_t n_args, const mp_obj_t* args);
 
 
 /**
  * @brief This is a description of insert soh
  *
- * @param sohEnum: integer, required,  
+ * @param timestamp: integer, required,  
  * @param sohBytes: bytes-like object, required
  *
  * @return status of command
@@ -147,9 +152,9 @@ mp_obj_t usqlite_insertCommand(size_t n_args, const mp_obj_t* args)
  * @param None
  *
  * @return list containing [index in database of command, 
- * 							integer command id,
- * 							bytes-like arguments to command
- * 							]
+ *							integer command id,
+ *							bytes-like arguments to command
+ *							]
  */
 mp_obj_t usqlite_getNextCommand(mp_obj_t self_in)
 {
@@ -204,37 +209,26 @@ mp_obj_t usqlite_deleteCommand(mp_obj_t self_in, mp_obj_t index)
  *
  * @return integer id in the databse
  */
-mp_obj_t usqlite_insertPayloadData(size_t n_args, size_t n_kw, const mp_obj_t* args)
+mp_obj_t usqlite_insertPayloadData(size_t n_args, const mp_obj_t* args)
 {
-	enum {ARG_self, ARG_timestamp, ARG_pos, ARG_data, ARG_len, NUM_ARGS};
-	static const mp_arg_t allowed_args[] = {
-		{MP_QSTR_self, MP_ARG_OBJ, {.u_obj = mp_const_none}},
-		{MP_QSTR_timestamp, MP_ARG_INT, {.u_int = 0}},
-		{MP_QSTR_pos, MP_ARG_OBJ, {.u_obj = mp_const_none}},
-		{MP_QSTR_data, MP_ARG_OBJ, {.u_obj = mp_const_none}},
-		{MP_QSTR_len, MP_ARG_INT, {.u_int = 0}},
-	};
-	
-	mp_arg_val_t arg_vals[MP_ARRAY_SIZE(allowed_args)];
-	mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, arg_vals);
 	
 	
-	usqlite_connection_t* self = MP_OBJ_TO_PTR(arg_vals[ARG_self].u_obj);
-	uint32_t timestamp = mp_obj_get_int(arg_vals[ARG_timestamp].u_int);
+	
+	usqlite_connection_t* self = MP_OBJ_TO_PTR(args[0]);
+	uint32_t timestamp = mp_obj_get_int(args[1]);
 	//switch to numpy array ?
 	mp_buffer_info_t bufinfo;
-	mp_get_buffer(arg_vals[ARG_pos].u_obj, &bufinfo, MP_BUFFER_READ);
-	
-	mp_buffer_info_t bufinfo2;
-	mp_get_buffer(arg_vals[ARG_data].u_obj, &bufinfo2, MP_BUFFER_READ);
-
-	size_t len = arg_vals[ARG_len].u_obj;
-	int ret;
-	if (len ==0) {
-	
+	mp_get_buffer(args[2], &bufinfo, MP_BUFFER_READ);
+	int ret;	
+	if (n_args > 4) {
+	   	mp_buffer_info_t bufinfo2;
+		mp_get_buffer(args[3], &bufinfo2, MP_BUFFER_READ);
+		size_t len = mp_obj_get_int(args[4]); 
 		ret = insertPayloadData(self, bufinfo2.buf, bufinfo2.len, bufinfo.buf, timestamp);
 	}
+	
 	else {
+		size_t len = mp_obj_get_int(args[3]);
 		ret = createEmptyPayloadEntry(self, len, bufinfo.buf, timestamp);
 	}
 	return mp_obj_new_int(ret);
@@ -245,62 +239,49 @@ mp_obj_t usqlite_insertPayloadData(size_t n_args, size_t n_kw, const mp_obj_t* a
 /**
  * @brief fetch payload data from the database, like soh, specify either index
  * or range of times.
- * def fetchPayloadData(self, index, pos=None, startTime=0, endTime=0):
+ * def fetchPayloadData(self, index):
+ * def fetchPayloadData(self, startTime=0, endTime=0):
  *
  *
  * @param index: integer, optional index of command in database. Negative indices are supported
  * @param start_time: integer, optional time to start searching for payload data
  * @param stop_time: integer, optional time to stop searching for payload data
  * @return list containing [ integer start time of experiment,
- * 							 integer stop time of experiment,
- * 							 bytes-like xyz position of experiment,
- * 							 bytes-like raw payload bytes
- * 							 ] 
+ *							 integer stop time of experiment,
+ *							 bytes-like xyz position of experiment,
+ *							 bytes-like raw payload bytes
+ *							 ] 
  */
-mp_obj_t usqlite_fetchPayloadData(size_t n_args,size_t n_kw, const mp_obj_t* args)
+mp_obj_t usqlite_fetchPayloadData(size_t n_args,const mp_obj_t* args)
 {
 	
-	enum {ARG_self, ARG_index, ARG_pos, ARG_startTime, ARG_endTime, NUM_ARGS};
-	static const mp_arg_t allowed_args[] = {
-		{MP_QSTR_self, MP_ARG_OBJ, {.u_obj = mp_const_none}},
-		{MP_QSTR_index, MP_ARG_INT, {.u_int = 0}},
-		{MP_QSTR_pos, MP_ARG_OBJ, {.u_obj = mp_const_none}},
-		{MP_QSTR_start_time, MP_ARG_INT, {.u_int = 0}},
-		{MP_QSTR_end_time, MP_ARG_INT, {.u_int = 0}},
-	};
-	
-	mp_arg_val_t arg_vals[MP_ARRAY_SIZE(allowed_args)];
-	mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, arg_vals);
 	
 	
 	usqlite_connection_t* self = MP_OBJ_TO_PTR(args[0]);
-	uint32_t index = arg_vals[ARG_index].u_int;
-	double pos[3];
-	uint32_t timeStart = arg_vals[ARG_startTime].u_int;
-	uint32_t timeStop  = arg_vals[ARG_endTime].u_int;
-	
-	
-
+	size_t len;
 	uint8_t* buf;
-	size_t len = 0;
-	
-	if ((timeStart !=0) && (timeStop !=0 )) {
-		int ret = fetchPayloadDataTime(self, &index, buf, &len, pos, &timeStart, &timeStop);
-	}
-	else if (arg_vals[ARG_pos].u_obj != mp_const_none) {
-		int ret = fetchPayloadDataPos(self, &index, buf, &len, pos, &timeStart);
+	uint32_t timeStart;
+	double pos[3];
+	if (n_args <3) {
+
+		uint32_t index = mp_obj_get_int(args[1]); 
+		int ret = fetchPayloadDataID(self, handleNegativeIndex(self, "payload", index), &buf, &len, &pos,  &timeStart);
+
 	}
 	else {
-		int ret = fetchPayloadDataID(self, handleNegativeIndex(self, "payload", index), buf, &len, pos, &timeStart);
+		
+		timeStart = mp_obj_get_int(args[1]);
+		uint32_t timeStop  = mp_obj_get_int(args[2]); 
+		int ret = fetchPayloadDataTime(self, &index, &buf, &len,&pos,  &timeStart, &timeStop);
 	}
-
+	
+	
 
 	mp_obj_t data = mp_obj_new_bytearray(len, buf);
 	mp_obj_t t1 = mp_obj_new_int(timeStart);
-	mp_obj_t t2 = mp_obj_new_int(timeStop);
 	mp_obj_t r = mp_obj_new_bytearray(3 * sizeof(double), pos);
-	mp_obj_t list[3] = {t1,t2, r, data};
-	return mp_obj_new_list(4, list);
+	mp_obj_t list[3] = {t1,r, data};
+	return mp_obj_new_list(3, list);
 
 }
 
@@ -390,7 +371,7 @@ mp_obj_t usqlite_deleteEntry(size_t n_args, const mp_obj_t* args)
 	usqlite_connection_t* self = MP_OBJ_TO_PTR(args[0]);
 	uint32_t id = mp_obj_get_int(args[1]);
 	const char* tableName = mp_obj_str_get_str(args[2]);
-	return mp_obj_get_int(deleteEntry(self, id, tableName));
+	return mp_obj_new_int(deleteEntry(self, id, tableName));
 }
 
 
@@ -484,4 +465,78 @@ mp_obj_t usqlite_setUplinkPacketReceived(size_t n_args, const mp_obj_t* args)
 	return mp_obj_new_int(setUplinkPacketReceived(self, txID, packetID, val));
 }
 
+
+
+
+mp_obj_t usqlite_insertConfig(size_t n_args, const mp_obj_t* args)
+{
+	usqlite_connection_t* self = MP_OBJ_TO_PTR(args[0]);
+	mp_buffer_info_t bufinfo;
+	mp_get_buffer(args[1], &bufinfo, MP_BUFFER_READ);
+	int ec = insertConfig(self, bufinfo.buf, bufinfo.len);
+	return mp_obj_new_int(ec);
+}
+
+
+mp_obj_t usqlite_fetchConfig(size_t n_args,const mp_obj_t* args)
+{
+	usqlite_connection_t* self = MP_OBJ_TO_PTR(args[0]);
+	uint32_t index = mp_obj_get_int(args[1]);
+
+
+	uint8_t* data;
+	size_t len;
+	
+	int ret = fetchConfig(self, index, &data, &len);
+	return mp_obj_new_bytearray(len, data);
+}
+
+
+mp_obj_t usqlite_createDownlink(size_t n_args, const mp_obj_t* args) {
+
+	usqlite_connection_t* self = MP_OBJ_TO_PTR(args[0]);
+	mp_buffer_info_t bufinfo;
+	mp_get_buffer(args[1], &bufinfo, MP_BUFFER_READ);
+	size_t numPackets = mp_obj_get_int(args[2]);
+	size_t priority = mp_obj_get_int(args[3]);
+	return mp_obj_new_int(createDownlink(self, bufinfo.buf, bufinfo.len, numPackets, priority)); 
+}
+
+mp_obj_t usqlite_createDownlinkEmpty(size_t n_args, const mp_obj_t* args) {
+
+	usqlite_connection_t* self = MP_OBJ_TO_PTR(args[0]);
+	size_t len = mp_obj_get_int(args[1]);	
+	size_t numPackets = mp_obj_get_int(args[2]);
+	size_t priority = mp_obj_get_int(args[3]);
+	return mp_obj_new_int(createDownlinkEmpty(self, len, numPackets, priority)); 
+
+}
+
+
+mp_obj_t usqlite_getNextDownlink(mp_obj_t self_in)
+{
+	usqlite_connection_t* self = MP_OBJ_TO_PTR(self_in);
+	uint8_t* data;
+	size_t len = 0;
+	size_t ind;
+	
+	int ret = getNextDownlink(self, &data, &len, &ind);
+	mp_obj_t args = mp_obj_new_bytearray(len, data);
+	mp_obj_t index = mp_obj_new_int(ind);
+	mp_obj_t list[2] = {index, args};
+	return mp_obj_new_list(2, list);
+
+}
+
+
+mp_obj_t usqlite_getNextDownlinkID(mp_obj_t self_in)
+{
+	usqlite_connection_t* self = MP_OBJ_TO_PTR(self_in);
+	size_t ind;
+	
+	int ret = getNextDownlinkID(self, &ind);
+	mp_obj_t index = mp_obj_new_int(ind);
+	return index; 
+
+}
 
