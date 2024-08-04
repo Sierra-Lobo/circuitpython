@@ -413,8 +413,8 @@
 [submodule "frozen/adcs"]
 	path = frozen/adcs
 	url = https://github.com/Sierra-Lobo/adcs-restructure.git
-[submodule "frozen/library_pycubed_rfm9x"]
-	path = frozen/library_pycubed_rfm9x
+[submodule "frozen/pycubed_rfm9x"]
+	path = frozen/pycubed_rfm9x
 	url = https://github.com/Sierra-Lobo/library_pycubed_rfm9x.py.git
 [submodule "frozen/mtdb"]
 	path = frozen/mtdb
