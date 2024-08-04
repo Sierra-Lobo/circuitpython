@@ -67,6 +67,20 @@ OPTIMIZATION_FLAGS ?= -Os
 CFLAGS += -DCFG_TUSB_MCU=OPT_MCU_SAME5X -DCFG_TUD_MIDI_RX_BUFSIZE=128 -DCFG_TUD_CDC_RX_BUFSIZE=256 -DCFG_TUD_MIDI_TX_BUFSIZE=128 -DCFG_TUD_CDC_TX_BUFSIZE=256 -DCFG_TUD_MSC_BUFSIZE=1024
 endif
 
+CFLAGS += -DSTACK_CANARY_VALUE=0xa5a5a5a5
+CFLAGS += -Wno-error=undef
+CFLAGS += -Wno-error=discarded-qualifiers
+CFLAGS += -Wno-error=float-equal
+CFLAGS += -Wno-error=cast-align
+CFLAGS += -Wno-error=overflow
+CFLAGS += -Wno-error=sign-compare
+CFLAGS += -Wno-error=incompatible-pointer-types
+CFLAGS += -Wno-error=unused-function
+CFLAGS += -Wno-error=double-promotion
+CFLAGS += -Wno-error=unused-variable
+CFLAGS += -Wno-error=maybe-uninitialized
+CFLAGS += -Wno-error=unused-but-set-variable
+
 # option to override default optimization level, set in boards/$(BOARD)/mpconfigboard.mk
 CFLAGS += $(OPTIMIZATION_FLAGS)
 
@@ -355,7 +369,7 @@ else
 $(BUILD)/firmware.elf: $(OBJ) $(GENERATED_LD_FILE)
 	$(STEPECHO) "LINK $@"
 	$(Q)echo $(OBJ) > $(BUILD)/firmware.objs
-	$(Q)$(CC) -o $@ $(LDFLAGS) @$(BUILD)/firmware.objs -Wl,--print-memory-usage -Wl,--start-group $(LIBS) -Wl,--end-group
+	$(Q)$(CC) -o $@ $(LDFLAGS) @$(BUILD)/firmware.objs -Wl,--print-memory-usage -Wl,--start-group $(LIBS) -Wl,--end-group -lm
 	$(Q)$(SIZE) $@ | $(PYTHON) $(TOP)/tools/build_memory_info.py $(GENERATED_LD_FILE) $(BUILD)
 endif
 
