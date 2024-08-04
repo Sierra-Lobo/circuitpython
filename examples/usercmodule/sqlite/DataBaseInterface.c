@@ -1,0 +1,458 @@
+#include "DataBaseInterface.h"
+#include "databaseUtils.h"
+#include "math.h"
+
+
+
+status initializeDatabase(usqlite_connection_t* self)
+{
+	if (self->active) return SUCCESS;
+		
+	usqlite_cursor_t cursor;
+	cursor.connection = self;
+	int result= SUCCESS;
+	
+	//need way of checking if tables have already been made
+	updateTablesList(self);
+	if (!(self->tables & 1)) {	
+		result = executeStr(&cursor, create_config);
+		if (result != SQLITE_DONE) {
+			sqlite3_close(self->db);
+            mp_raise_ValueError(MP_ERROR_TEXT("result is not success"));
+			return result;
+		}
+	}
+
+	if (!(self->tables & (1 << COMMANDS))) {
+		result = executeStr(&cursor, create_commands);
+		if (result != SQLITE_DONE) {
+			sqlite3_close(self->db);
+			mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Cannot create commands table"));
+			return result;
+		}
+		self->tables |= (1 << COMMANDS);
+	}
+
+	if (!(self->tables & (1 << SOH))) {
+		result = executeStr(&cursor, create_soh);
+		if (result != SQLITE_DONE) {
+			sqlite3_close(self->db);
+			mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Cannot create soh table"));
+			return result;
+		}
+		self->tables |= (1 << SOH);
+	}
+
+	if (!(self->tables & (1 << DOWNLINKS))) {
+		result = executeStr(&cursor, create_downlinks);
+		if (result != SQLITE_DONE) {
+			sqlite3_close(self->db);
+			mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Cannot create downlinks table"));
+			return result;
+		}
+		self->tables |= (1 << DOWNLINKS);
+	}
+
+	if (!(self->tables & (1 << EVENTS))) {
+		result = executeStr(&cursor, create_events);
+		if (result != SQLITE_DONE) {
+			sqlite3_close(self->db);
+			mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Cannot create events table"));
+			return result;
+			}
+		self->tables |= (1 << EVENTS);
+		}
+	if (!(self->tables & (1 << UPLINKS))) {
+		result = executeStr(&cursor, create_uplinks);
+		if (result != SQLITE_DONE) {
+			sqlite3_close(self->db);
+			mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Cannot create uplinks table"));
+			return result;
+		}
+		self->tables |= (1 << UPLINKS);
+	}
+	
+	if (!(self->tables & (1 << PAYLOAD))) {
+		result = executeStr(&cursor, create_payload);
+		if (result != SQLITE_DONE) {
+			sqlite3_close(self->db);
+			mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Cannot create uplinks table"));
+			return result;
+		}
+		self->tables |= (1 << PAYLOAD);
+	}
+
+	self->active = 1;
+	return result;
+
+
+}
+
+int insertSoh(usqlite_connection_t* self, uint32_t timestamp, uint8_t* data, size_t len) {
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, insert_soh);
+	sqlite3_bind_int64(cursor.stmt, 1, timestamp);
+	sqlite3_bind_blob(cursor.stmt, 2, data, len, SQLITE_TRANSIENT);
+	stepExecute(&cursor);
+	return SUCCESS; 
+	
+}
+
+
+
+
+
+
+
+
+
+int fetchSoh(usqlite_connection_t* self, uint32_t index, uint8_t** data, size_t* len) {
+
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, query_soh_index);
+	sqlite3_bind_int64(cursor.stmt, 1, index);
+	stepExecute(&cursor);
+	uint32_t timestamp = sqlite3_column_int64(cursor.stmt, 0);
+	getBlob(&cursor, 1, data, len);	
+	return timestamp; 
+}
+
+int fetchSohTimestamp(usqlite_connection_t* self, uint32_t timeStart, uint32_t timeEnd, uint8_t** data, size_t* len) {
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, query_soh_time);
+	sqlite3_bind_int64(cursor.stmt, 1, timeStart);
+	sqlite3_bind_int64(cursor.stmt, 2, timeEnd);
+	stepExecute(&cursor);
+	uint32_t timestamp = sqlite3_column_int64(cursor.stmt, 0);
+	getBlob(&cursor, 1, data, len);	
+	return timestamp; 
+
+}
+
+int logEvent(usqlite_connection_t* self, uint8_t level, const char* msg, size_t n, uint32_t timestamp, double uptime ){
+	
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, insert_event);
+	sqlite3_bind_int(cursor.stmt, 1, level);
+	sqlite3_bind_int64(cursor.stmt, 2, timestamp);
+	sqlite3_bind_int64(cursor.stmt, 3, uptime);
+	sqlite3_bind_text(cursor.stmt, 4, msg, n, SQLITE_TRANSIENT); 
+	stepExecute(&cursor);
+	return SUCCESS; 
+}
+
+
+int insertCommand(usqlite_connection_t* self, uint8_t cmdID, double dueTime, uint8_t* args, size_t len ){
+
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, insert_command);
+	sqlite3_bind_int64(cursor.stmt, 1, dueTime);
+	sqlite3_bind_int(cursor.stmt, 2, cmdID);
+	sqlite3_bind_blob(cursor.stmt, 3, args, len, SQLITE_TRANSIENT);
+	stepExecute(&cursor);
+	return SUCCESS; 
+
+}
+
+
+int getNextCommand(usqlite_connection_t* self, uint8_t* cmdID, uint8_t** args, size_t* len, uint32_t* index){
+
+	
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, query_command);
+	stepExecute(&cursor);
+	*index = getInt(&cursor, 0);
+	int32_t ctime = getInt(&cursor, 1);
+	*cmdID = getInt(&cursor, 2);
+	getBlob(&cursor, 3, args, len);
+	return SUCCESS; 
+
+}
+
+
+int deleteCommand(usqlite_connection_t* self, uint32_t index){
+
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, delete_command);
+	sqlite3_bind_int64(cursor.stmt, 1, index);
+	stepExecute(&cursor);
+	return SUCCESS; 
+
+}
+
+
+
+int insertPayloadData(usqlite_connection_t* self, uint8_t* data, size_t len,  double pos[3], uint32_t timestamp ) {
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, insert_payload);
+	sqlite3_bind_int64(cursor.stmt, 1, timestamp);
+	sqlite3_bind_blob(cursor.stmt, 2, pos, 3 * sizeof(double), SQLITE_TRANSIENT);
+	sqlite3_bind_blob(cursor.stmt, 3, data, len, SQLITE_TRANSIENT);
+	stepExecute(&cursor);
+	stepExecute(&cursor);
+	return getInt(&cursor, 0); 
+
+}
+
+
+int createEmptyPayloadEntry(usqlite_connection_t* self, size_t dataLen, double pos[3], uint32_t timestamp)
+{
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, insert_payload_empty);
+	sqlite3_bind_int64(cursor.stmt, 1, timestamp);
+	sqlite3_bind_blob(cursor.stmt, 2, pos, 3 * sizeof(double), SQLITE_TRANSIENT);
+	sqlite3_bind_int64(cursor.stmt, 3, dataLen);
+	stepExecute(&cursor);
+	stepExecute(&cursor);
+	return getInt(&cursor, 0);
+}
+
+
+int fetchPayloadDataID(usqlite_connection_t* self, uint32_t index, uint8_t** data, size_t* len, uint8_t** pos, uint32_t* timestamp) {
+
+
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, query_payload_index);
+	sqlite3_bind_int64(cursor.stmt, 1, index);
+	stepExecute(&cursor);
+	*timestamp = sqlite3_column_int64(cursor.stmt, 0);
+	getBlob(&cursor, 1, data, len);
+	size_t poslen;	
+	getBlob(&cursor, 2, pos, &poslen);	
+	return SUCCESS; //?
+}
+
+int fetchPayloadDataTime(usqlite_connection_t* self, uint32_t* index, uint8_t** data,size_t* len,  uint8_t** pos, uint32_t* timeStart, uint32_t* timeStop) {
+
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, query_payload_time);
+	sqlite3_bind_int64(cursor.stmt, 1, *timeStart);
+	sqlite3_bind_int64(cursor.stmt, 2, *timeStop);
+	stepExecute(&cursor);
+	*timeStart= sqlite3_column_int64(cursor.stmt, 0);
+	getBlob(&cursor, 1, data, len);
+	size_t poslen;	
+	getBlob(&cursor, 2, pos, &poslen);	
+	return SUCCESS; //?
+	
+}
+
+
+int fetchPayloadDataPos(usqlite_connection_t* self, uint32_t* index, uint8_t* data,size_t* len,  double pos[3], double* timestamp) {
+	
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, query_payload_pos);
+	sqlite3_bind_int64(cursor.stmt, 1, *timestamp);
+	stepExecute(&cursor);
+	*timestamp= sqlite3_column_int64(cursor.stmt, 0);
+	getBlob(&cursor, 1, &data, len);
+	size_t poslen;	
+	getBlob(&cursor, 2, &pos, &poslen);	
+	return SUCCESS; //?
+
+
+}
+
+
+
+int deletePayloadDataID(usqlite_connection_t* self, uint32_t index) {
+
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, delete_payload);
+	sqlite3_bind_int64(cursor.stmt, 1, index);
+	stepExecute(&cursor);
+	return SUCCESS; 
+
+}
+
+
+
+
+
+
+int createUplink(usqlite_connection_t* self, uint32_t txID, uint32_t txSize, uint32_t numPackets) {
+
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, insert_uplink);
+	sqlite3_bind_int64(cursor.stmt, 1, txID);
+	sqlite3_bind_int64(cursor.stmt, 2, txSize);
+	//figure out what to do for bitset, this might be ok, or maybe make obj for bitset
+	uint8_t* missing;
+	createBitset(&missing, numPackets);
+	sqlite3_bind_blob(cursor.stmt, 3, missing, numPackets, SQLITE_TRANSIENT);
+	sqlite3_bind_int64(cursor.stmt, 4, numPackets);
+	stepExecute(&cursor);
+	m_free(missing);
+	return SUCCESS; 
+
+}
+
+
+
+/*
+int insertUplinkPacket(usqlite_connection_t* self,uint32_t txID, uint32_t packetID,  uint8_t* data, size_t len) {
+
+ sqlite_blob_write ???
+}
+*/
+
+int deleteEntry(usqlite_connection_t* self, uint32_t ID, const char* tableName) {
+	usqlite_cursor_t cursor;
+	if (strcmp(tableName, "configs") ==0) createStatement(self, &cursor, delete_config);
+	if (strcmp(tableName, "commands") ==0) createStatement(self, &cursor, delete_command);
+	if (strcmp(tableName, "soh") ==0) createStatement(self, &cursor, delete_soh_id);
+	if (strcmp(tableName, "downlinks") ==0) createStatement(self, &cursor, delete_downlink_id);
+	if (strcmp(tableName, "uplinks") ==0) createStatement(self, &cursor, delete_uplink_id);
+	if (strcmp(tableName, "events") ==0) createStatement(self, &cursor, delete_event);
+	if (strcmp(tableName, "payload") ==0) createStatement(self, &cursor, delete_payload);
+	sqlite3_bind_int64(cursor.stmt, 1, ID);
+	stepExecute(&cursor);
+	return SUCCESS; 
+}
+
+
+int createDownlink(usqlite_connection_t* self, uint8_t* data, size_t len, size_t numPackets, int priority) {
+	
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, insert_downlink);
+	sqlite3_bind_blob(cursor.stmt, 1, data, len, SQLITE_TRANSIENT); 
+	sqlite3_bind_int(cursor.stmt, 2, priority);
+	
+	sqlite3_bind_blob(cursor.stmt, 3, data, len, SQLITE_TRANSIENT); 
+	//sqlite3_bind_int(cursor.stmt, 3, ( numPackets / 8 ) + ( numPackets % 8 > 0 ));
+	sqlite3_bind_int(cursor.stmt, 4, numPackets);
+	stepExecute(&cursor);
+	stepExecute(&cursor);
+	size_t dbid = getInt(&cursor, 0);
+	return dbid;
+}
+
+int createDownlinkEmpty(usqlite_connection_t* self, size_t len, size_t numPackets, int priority) {
+	
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, insert_downlink_empty);
+	sqlite3_bind_int(cursor.stmt, 1, len); 
+	sqlite3_bind_int(cursor.stmt, 2, priority);
+	sqlite3_bind_int(cursor.stmt, 3, ( numPackets / 8 ) + ( numPackets % 8 > 0 ));
+	sqlite3_bind_int(cursor.stmt, 4, numPackets);
+	stepExecute(&cursor);
+	stepExecute(&cursor);
+	size_t dbid = getInt(&cursor, 0);
+	return dbid;
+}
+
+
+int getNextDownlink(usqlite_connection_t* self, uint8_t** data, size_t* len, uint32_t* index) {
+
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, query_downlink);
+	stepExecute(&cursor);
+	*index = getInt(&cursor, 0);
+	getBlob(&cursor, 1, data, len);
+	return SUCCESS; 
+
+}
+
+int getNextDownlinkID(usqlite_connection_t* self, uint32_t* index) {
+
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, query_downlink_id);
+	stepExecute(&cursor);
+	*index = getInt(&cursor, 0);
+	return SUCCESS; 
+}
+
+int getMissingPacketIds(usqlite_connection_t* self, uint32_t txID, uint32_t** packetIDs, size_t* len)
+{
+	usqlite_cursor_t cursor;
+	uint8_t* missing;
+	createStatement(self, &cursor, query_missing_uplink);
+	sqlite3_bind_int64(cursor.stmt, 1, txID);
+	stepExecute(&cursor);
+	size_t numBytes;
+	(*len) = getInt(&cursor, 0);
+	getBlob(&cursor, 1, &missing, &numBytes); 
+	(*packetIDs) = (uint32_t*)m_new(byte ,(*len) * 4 );	
+	size_t j=0;
+	for (size_t i=0; i<(*len); i++)
+	{
+		if (!getBitsetValue(missing, i)) {
+			(*packetIDs)[j++] = i;
+		}
+
+	}
+	(*len) = j;
+	return SUCCESS;
+}
+
+
+
+int fetchDataBlob(usqlite_connection_t* self, const char* tableName, uint32_t rowID, uint8_t* data, size_t len, size_t offset)
+{
+	sqlite3_blob* blob;
+	
+	int ec = sqlite3_blob_open( self->db, "main", tableName, "data", rowID, 0, &blob );
+	int available = sqlite3_blob_bytes(blob) - offset;
+	len = len > available ?  available : len;
+	ec = sqlite3_blob_read(blob, data, len, offset);
+	ec =  sqlite3_blob_close(blob);
+	//should probably first check for errors, if error return error else return len
+	return len;
+}
+
+int writeDataBlob(usqlite_connection_t* self, const char* tableName, uint32_t rowID, uint8_t* data, size_t len, size_t offset)
+{
+	sqlite3_blob* blob;
+	
+	int ec = sqlite3_blob_open( self->db, "main", tableName, "data", rowID, 1, &blob );
+	int available = sqlite3_blob_bytes(blob) - offset;
+	len = len > available ?  available : len;
+	ec = sqlite3_blob_write(blob, data, len, offset);
+	ec =  sqlite3_blob_close(blob);
+	return ec;
+}
+
+int setUplinkPacketReceived(usqlite_connection_t* self, uint32_t rowID, uint32_t packetID, uint8_t val)
+{
+	
+	sqlite3_blob* blob;
+	
+	int ec = sqlite3_blob_open( self->db, "main", "uplinks", "missing", rowID, 1, &blob );
+	size_t missingLength = sqlite3_blob_bytes(blob);
+	uint8_t* data = m_new(byte, missingLength);
+	ec = sqlite3_blob_read(blob, data, missingLength, 0);
+
+	setBitsetValue(data, packetID, val);
+	ec = sqlite3_blob_write(blob, data, missingLength, 0);
+	ec =  sqlite3_blob_close(blob);
+	//should probably first check for errors, if error return error else return len
+	m_free(data);
+	return ec;
+
+}
+
+int insertConfig(usqlite_connection_t* self, uint8_t* data, size_t len)
+{
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, insert_config);
+	sqlite3_bind_blob(cursor.stmt, 1, data, len, SQLITE_TRANSIENT);
+	stepExecute(&cursor);
+	return SUCCESS; 
+
+
+}
+
+int fetchConfig(usqlite_connection_t* self, uint32_t index, uint8_t* data, size_t* len)
+{
+	usqlite_cursor_t cursor;
+	createStatement(self, &cursor, query_config_index);
+	sqlite3_bind_int64(cursor.stmt, 1, index);
+	stepExecute(&cursor);
+	getBlob(&cursor, 0, data, len);	
+	return SUCCESS; 
+
+
+}
+
+
+
