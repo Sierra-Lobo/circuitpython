@@ -341,3 +341,36 @@
 [submodule "lib/certificates"]
 	path = lib/certificates
 	url = https://github.com/adafruit/certificates
+[submodule "frozen/SierraLobo_CircuitPython_DS134x"]
+	path = frozen/SierraLobo_CircuitPython_DS134x
+	url = https://github.com/Sierra-Lobo/SierraLobo_CircuitPython_DS134x.git
+[submodule "frozen/SierraLobo_CircuitPython_IAM20380"]
+	path = frozen/SierraLobo_CircuitPython_IAM20380
+	url = https://github.com/Sierra-Lobo/SierraLobo_CircuitPython_IAM20380.git
+[submodule "frozen/SierraLobo_CircuitPython_INA230"]
+	path = frozen/SierraLobo_CircuitPython_INA230
+	url = https://github.com/Sierra-Lobo/SierraLobo_CircuitPython_INA230.git
+[submodule "frozen/SierraLobo_CircuitPython_MC3419"]
+	path = frozen/SierraLobo_CircuitPython_MC3419
+	url = https://github.com/Sierra-Lobo/SierraLobo_CircuitPython_MC3419.git
+[submodule "frozen/adcs"]
+	path = frozen/adcs
+	url = https://github.com/Sierra-Lobo/adcs-restructure.git
+[submodule "frozen/pycubed_rfm9x"]
+	path = frozen/pycubed_rfm9x
+	url = https://github.com/Sierra-Lobo/library_pycubed_rfm9x.py.git
+[submodule "frozen/mtdb"]
+	path = frozen/mtdb
+	url = https://github.com/Sierra-Lobo/mtdb-circuitpython.git
+[submodule "frozen/Adafruit_CircuitPython_GPS"]
+	path = frozen/Adafruit_CircuitPython_GPS
+	url = https://github.com/adafruit/Adafruit_CircuitPython_GPS.git
+[submodule "frozen/tasko"]
+	path = frozen/tasko
+	url = https://github.com/Sierra-Lobo/tasko.git
+[submodule "frozen/sierralobo_rockblock"]
+	path = frozen/sierralobo_rockblock
+	url = https://github.com/Sierra-Lobo/sierralobo_rockblock.git
+[submodule "frozen/SierraLobo_MTDB"]
+	path = frozen/SierraLobo_MTDB
+	url = https://github.com/Sierra-Lobo/mtdb-circuitpython.git
