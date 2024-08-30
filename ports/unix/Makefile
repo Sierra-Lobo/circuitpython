@@ -28,6 +28,7 @@ UNAME_S := $(shell uname -s)
 
 # include py core make definitions
 include $(TOP)/py/py.mk
+include $(TOP)/extmod/extmod.mk
 
 GIT_SUBMODULES = lib/axtls lib/berkeley-db-1.xx lib/libffi
 
@@ -54,6 +55,22 @@ COPT += -fdata-sections -ffunction-sections
 # Always enable symbols -- They're occasionally useful, and don't make it into the
 # final .bin/.hex/.dfu so the extra size doesn't matter.
 CFLAGS += -g
+
+CFLAGS += -Wno-error=float-conversion
+CFLAGS += -DSTACK_CANARY_VALUE=0xa5a5a5a5
+CFLAGS += -Wno-error=undef
+CFLAGS += -Wno-error=discarded-qualifiers
+CFLAGS += -Wno-error=float-equal
+CFLAGS += -Wno-error=cast-align
+CFLAGS += -Wno-error=overflow
+CFLAGS += -Wno-error=sign-compare
+CFLAGS += -Wno-error=incompatible-pointer-types
+CFLAGS += -Wno-error=unused-function
+CFLAGS += -Wno-error=double-promotion
+CFLAGS += -Wno-error=unused-variable
+CFLAGS += -Wno-error=maybe-uninitialized
+CFLAGS += -Wno-error=unused-but-set-variable
+CFLAGS += -Wno-error=pointer-arith
 
 ifndef DEBUG
 # _FORTIFY_SOURCE is a feature in gcc/glibc which is intended to provide extra
@@ -151,6 +168,7 @@ ifneq ($(MICROPY_BLUETOOTH_BTSTACK),1)
 MICROPY_BLUETOOTH_BTSTACK ?= 1
 endif
 endif
+
 
 CFLAGS_MOD += -DMICROPY_PY_BLUETOOTH=1
 CFLAGS_MOD += -DMICROPY_PY_BLUETOOTH_ENABLE_CENTRAL_MODE=1

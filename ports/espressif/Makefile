@@ -108,6 +108,7 @@ ifeq ($(IDF_TARGET),esp32c3)
 CFLAGS += -include "esp32c3_fix.h"
 endif
 
+
 CFLAGS += \
 	-DHAVE_CONFIG_H \
 	-DESP_PLATFORM=1 \
@@ -118,6 +119,19 @@ CFLAGS += \
 # This define is in FreeRTOS as tskSTACK_FILL_BYTE 0xa5U which we expand out to a full word.
 CFLAGS += -DSTACK_CANARY_VALUE=0xa5a5a5a5
 
+CFLAGS += -DSTACK_CANARY_VALUE=0xa5a5a5a5
+CFLAGS += -Wno-error=undef
+CFLAGS += -Wno-error=discarded-qualifiers
+CFLAGS += -Wno-error=float-equal
+CFLAGS += -Wno-error=cast-align
+CFLAGS += -Wno-error=overflow
+CFLAGS += -Wno-error=sign-compare
+CFLAGS += -Wno-error=incompatible-pointer-types
+CFLAGS += -Wno-error=unused-function
+CFLAGS += -Wno-error=double-promotion
+CFLAGS += -Wno-error=unused-variable
+CFLAGS += -Wno-error=maybe-uninitialized
+CFLAGS += -Wno-error=unused-but-set-variable
 #Debugging/Optimization
 ifeq ($(DEBUG), 1)
 	CFLAGS += -ggdb

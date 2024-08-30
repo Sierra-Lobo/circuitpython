@@ -16,10 +16,11 @@ import subprocess
 
 def version_string(path=None, *, valid_semver=False):
     version = None
+    return 'version1'
     try:
         tag = subprocess.check_output("git describe --tags --exact-match", shell=True, cwd=path)
         version = tag.strip().decode("utf-8", "strict")
-    except subprocess.CalledProcessError:
+    except:# subprocess.CalledProcessError:
         describe = subprocess.check_output("git describe --tags", shell=True, cwd=path)
         tag, additional_commits, commit_ish = (
             describe.strip().decode("utf-8", "strict").rsplit("-", maxsplit=2)

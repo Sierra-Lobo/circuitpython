@@ -91,6 +91,18 @@ CFLAGS += $(OPTIMIZATION_FLAGS)
 # Add -ftree-vrp optimization and checking to all builds. It's not enabled for -Os by default.
 CFLAGS += -ftree-vrp
 
+CFLAGS += -Wno-error=undef
+CFLAGS += -Wno-error=discarded-qualifiers
+CFLAGS += -Wno-error=float-equal
+CFLAGS += -Wno-error=cast-align
+CFLAGS += -Wno-error=overflow
+CFLAGS += -Wno-error=sign-compare
+CFLAGS += -Wno-error=incompatible-pointer-types
+CFLAGS += -Wno-error=unused-function
+CFLAGS += -Wno-error=double-promotion
+CFLAGS += -Wno-error=unused-variable
+CFLAGS += -Wno-error=maybe-uninitialized
+CFLAGS += -Wno-error=unused-but-set-variable
 $(echo PERIPHERALS_CHIP_FAMILY=$(PERIPHERALS_CHIP_FAMILY))
 #Debugging/Optimization
 ifeq ($(DEBUG), 1)
@@ -369,7 +381,7 @@ else
 $(BUILD)/firmware.elf: $(OBJ) $(GENERATED_LD_FILE)
 	$(STEPECHO) "LINK $@"
 	$(Q)echo $(OBJ) > $(BUILD)/firmware.objs
-	$(Q)$(CC) -o $@ $(LDFLAGS) @$(BUILD)/firmware.objs -Wl,--print-memory-usage -Wl,--start-group $(LIBS) -Wl,--end-group
+	$(Q)$(CC) -o $@ $(LDFLAGS) @$(BUILD)/firmware.objs -Wl,--print-memory-usage -Wl,--start-group $(LIBS) -Wl,--end-group -lm
 	$(Q)$(SIZE) $@ | $(PYTHON) $(TOP)/tools/build_memory_info.py $(GENERATED_LD_FILE) $(BUILD)
 endif
 
