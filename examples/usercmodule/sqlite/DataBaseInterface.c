@@ -146,7 +146,7 @@ int fetchSoh(usqlite_connection_t* self, uint32_t index, uint8_t** data, size_t*
 	sqlite3_bind_int64(cursor.stmt, 1, index);
 	stepExecute(&cursor);
 	uint32_t timestamp;
-	fetchInt(cursor.stmt, 0, &timestamp);
+	fetchInt(&cursor, 0, &timestamp);
 	fetchBlob(&cursor, 1, data, len);	
 	cursorExit(&cursor);
 	return timestamp; 
@@ -159,7 +159,7 @@ int fetchSohTimestamp(usqlite_connection_t* self, uint32_t timeStart, uint32_t t
 	sqlite3_bind_int64(cursor.stmt, 2, timeEnd);
 	stepExecute(&cursor);
 	uint32_t timestamp;
-	fetchInt(cursor.stmt, 0, &timestamp);
+	fetchInt(&cursor, 0, &timestamp);
 	fetchBlob(&cursor, 1, data, len);	
 	cursorExit(&cursor);
 	return timestamp; 
@@ -261,7 +261,7 @@ int fetchPayloadDataID(usqlite_connection_t* self, uint32_t index, uint8_t** dat
 	createStatement(self, &cursor, query_payload_index);
 	sqlite3_bind_int64(cursor.stmt, 1, index);
 	int ec = stepExecute(&cursor);
-	fetchInt(cursor.stmt, 0, timestamp);
+	fetchInt(&cursor, 0, timestamp);
 	fetchBlob(&cursor, 1, data, len);
 	size_t poslen;	
 	fetchBlob(&cursor, 2, pos, &poslen);	
@@ -276,7 +276,7 @@ int fetchPayloadDataTime(usqlite_connection_t* self, uint32_t* index, uint8_t** 
 	sqlite3_bind_int64(cursor.stmt, 1, *timeStart);
 	sqlite3_bind_int64(cursor.stmt, 2, *timeStop);
 	int ec = stepExecute(&cursor);
-	fetchInt(cursor.stmt, 0, timeStart);
+	fetchInt(&cursor, 0, timeStart);
 	fetchBlob(&cursor, 1, data, len);
 	size_t poslen;	
 	fetchBlob(&cursor, 2, pos, &poslen);	
@@ -292,7 +292,7 @@ int fetchPayloadDataPos(usqlite_connection_t* self, uint32_t* index, uint8_t* da
 	createStatement(self, &cursor, query_payload_pos);
 	sqlite3_bind_int64(cursor.stmt, 1, *timestamp);
 	int ec = stepExecute(&cursor);
-	fetchInt(cursor.stmt, 0, timestamp);
+	fetchInt(&cursor, 0, timestamp);
 	fetchBlob(&cursor, 1, &data, len);
 	size_t poslen;	
 	fetchBlob(&cursor, 2, &pos, &poslen);	

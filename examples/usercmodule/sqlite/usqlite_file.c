@@ -30,6 +30,8 @@ SOFTWARE.
 #include "py/stream.h"
 #include "py/builtin.h"
 
+#include "shared-bindings/os/__init__.h"
+
 
 
 #include "stdio.h"
@@ -55,6 +57,104 @@ SOFTWARE.
 
 
 
+#if !MICROPY_VFS 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <dirent.h>
+#ifdef _MSC_VER
+#include <direct.h> // For mkdir
+#endif
+#include "py/mpconfig.h"
+
+#include "py/runtime.h"
+#include "py/objtuple.h"
+#include "py/mphal.h"
+#include "py/mpthread.h"
+#include "extmod/vfs.h"
+
+#ifdef __ANDROID__
+#define USE_STATFS 1
+#endif
+
+#if defined(__GLIBC__) && defined(__GLIBC_PREREQ)
+#if __GLIBC_PREREQ(2, 25)
+#include <sys/random.h>
+#define _HAVE_GETRANDOM
+#endif
+#endif
+
+#include "py/objstr.h"
+typedef struct _mp_obj_listdir_t {
+    mp_obj_base_t base;
+    mp_fun_1_t iternext;
+    DIR *dir;
+} mp_obj_listdir_t;
+STATIC mp_obj_t listdir_next(mp_obj_t self_in) {
+    mp_obj_listdir_t *self = MP_OBJ_TO_PTR(self_in);
+
+    if (self->dir == NULL) {
+        goto done;
+    }
+    MP_THREAD_GIL_EXIT();
+    struct dirent *dirent = readdir(self->dir);
+    if (dirent == NULL) {
+        closedir(self->dir);
+        MP_THREAD_GIL_ENTER();
+        self->dir = NULL;
+    done:
+        return MP_OBJ_STOP_ITERATION;
+    }
+    MP_THREAD_GIL_ENTER();
+
+    mp_obj_tuple_t *t = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
+    t->items[0] = mp_obj_new_str(dirent->d_name, strlen(dirent->d_name));
+
+    #ifdef _DIRENT_HAVE_D_TYPE
+    #ifdef DTTOIF
+    t->items[1] = MP_OBJ_NEW_SMALL_INT(DTTOIF(dirent->d_type));
+    #else
+    if (dirent->d_type == DT_DIR) {
+        t->items[1] = MP_OBJ_NEW_SMALL_INT(MP_S_IFDIR);
+    } else if (dirent->d_type == DT_REG) {
+        t->items[1] = MP_OBJ_NEW_SMALL_INT(MP_S_IFREG);
+    } else {
+        t->items[1] = MP_OBJ_NEW_SMALL_INT(dirent->d_type);
+    }
+    #endif
+    #else
+    // DT_UNKNOWN should have 0 value on any reasonable system
+    t->items[1] = MP_OBJ_NEW_SMALL_INT(0);
+    #endif
+
+    #ifdef _DIRENT_HAVE_D_INO
+    t->items[2] = MP_OBJ_NEW_SMALL_INT(dirent->d_ino);
+    #else
+    t->items[2] = MP_OBJ_NEW_SMALL_INT(0);
+    #endif
+    return MP_OBJ_FROM_PTR(t);
+}
+STATIC mp_obj_t mod_os_ilistdir(size_t n_args, const mp_obj_t *args); 
+STATIC mp_obj_t mod_os_ilistdir(size_t n_args, const mp_obj_t *args) {
+    const char *path = ".";
+    if (n_args > 0) {
+        path = mp_obj_str_get_str(args[0]);
+    }
+    mp_obj_listdir_t *o = m_new_obj(mp_obj_listdir_t);
+    o->base.type = &mp_type_polymorph_iter;
+    MP_THREAD_GIL_EXIT();
+    o->dir = opendir(path);
+    MP_THREAD_GIL_ENTER();
+    o->iternext = listdir_next;
+    return MP_OBJ_FROM_PTR(o);
+}
+
+#endif
 
 extern const mp_obj_module_t mp_module_io;
 
@@ -88,7 +188,11 @@ bool usqlite_file_exists(const char *pathname) {
     bool exists = false;
 	size_t n_args = 1;
 	mp_obj_t args[] = {mp_obj_new_str(path, strlen(path))};
-    mp_obj_t listdir = mp_vfs_ilistdir(n_args, args); //mp_call_function_1(listdir, mp_obj_new_str(path, strlen(path)));
+#if MICROPY_VFS
+	mp_obj_t listdir = mp_vfs_ilistdir(n_args, args); //mp_call_function_1(listdir, mp_obj_new_str(path, strlen(path)));
+#else
+	mp_obj_t listdir = mod_os_ilistdir(n_args, args);
+#endif
 	mp_obj_t entry = mp_iternext(listdir);
 
     while (entry != MP_OBJ_STOP_ITERATION) {
@@ -163,16 +267,21 @@ int usqlite_file_open(MPFILE *file, const char *pathname, int flags) {
 
 
 //	mp_raise_TypeError(MP_ERROR_TEXT("cannot open file1"));
+	#if MICROPY_VFS
 	mp_vfs_mount_t *vfs = lookup_path(filename, &filename);
-   
+   	#endif
 	mp_obj_t meth[2 + 2];
 	mp_obj_t args[2] = {filename, filemode};
 	size_t n_args = 2;
 //	mp_raise_ValueError(MP_ERROR_TEXT("called load method..."));
-    mp_load_method(vfs->obj, MP_QSTR_open, meth);
+   	#if MICROPY_VFS
+	mp_load_method(vfs->obj, MP_QSTR_open, meth);
 	memcpy(meth + 2, args, n_args * sizeof(*args));
-    file->stream = mp_call_method_n_kw(n_args, 0, meth);
-    strcpy(file->pathname, pathname);
+	file->stream = mp_call_method_n_kw(n_args, 0, meth);
+	#else
+    file->stream = mp_builtin_open(2, args, NULL);//mp_call_method_n_kw(n_args, 0, meth);
+	#endif
+	strcpy(file->pathname, pathname);
 	file->flags = flags;
 	return SQLITE_OK;
 

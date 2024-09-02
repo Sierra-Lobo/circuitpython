@@ -38,7 +38,7 @@ SOFTWARE.
 #include <string.h>
 
 //#define usqlite_printf(msg) mp_printf(&mp_plat_print, msg);
-#if 1 
+#if 0
 #define usqlite_printf(...) mp_printf(&mp_plat_print, __VA_ARGS__);
 #else
 #define usqlite_printf(...) (void)0;
