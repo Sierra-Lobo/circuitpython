@@ -303,10 +303,20 @@ STATIC mp_obj_t stream_readinto(size_t n_args, const mp_obj_t *args) {
     // https://docs.python.org/3/library/socket.html#socket.socket.recv_into
     mp_uint_t len = bufinfo.len;
 	mp_uint_t offset = 0;
-	if (n_args > 2) {
+	if (n_args == 3) {
+		if (mp_get_stream(args[0])->pyserial_readinto_compatibility) {
+			mp_raise_ValueError(MP_ERROR_TEXT("length argument not allowed for this type"));
+		}
+		offset = 0;
+		len = mp_obj_get_int(args[2]);
+		if (len > bufinfo.len) {
+			len = bufinfo.len;
+		}
+	
+	}
 
-		len = mp_obj_get_int(args[3]);
 		if (n_args > 3) {
+			len = mp_obj_get_int(args[3]);
 			if (mp_get_stream(args[0])->pyserial_readinto_compatibility) {
 				mp_raise_ValueError(MP_ERROR_TEXT("length argument not allowed for this type"));
 			}
@@ -315,7 +325,6 @@ STATIC mp_obj_t stream_readinto(size_t n_args, const mp_obj_t *args) {
 				len = bufinfo.len;
 			}
 		}
-	}
 
     int error;
     mp_uint_t out_sz = mp_stream_read_exactly(args[0], (uint8_t*)bufinfo.buf + offset, len, &error);
