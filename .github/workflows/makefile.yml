@@ -13,9 +13,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        token: ${{ secrets.ACCESS_TOKEN }}
 
     - name: Install dependencies
-      run: | 
+      run: |
         echo "::group::Fetch history and tags"
         pip install -r requirements-dev.txt
         pip install huffman
