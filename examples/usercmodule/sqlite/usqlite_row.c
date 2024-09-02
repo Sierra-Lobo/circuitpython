@@ -31,7 +31,7 @@ STATIC void usqlite_row_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest);
 
 // ------------------------------------------------------------------------------
 
-void usqlite_row_type_initialize() {
+void usqlite_row_type_initialize(void) {
     static int initialized = 0;
 
     if (initialized) {
