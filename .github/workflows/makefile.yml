@@ -15,7 +15,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-        token: ${{ secrets.ACCESS_TOKEN }}
+        token: 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
 
     - name: Install dependencies
       run: |
