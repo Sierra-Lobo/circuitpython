@@ -15,7 +15,17 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Install dependencies
-      run: make fetch-all-submodules
+      run: | 
+        echo "::group::Fetch history and tags"
+        git fetch --no-recurse-submodules --shallow-since="2021-07-01" --tags https://github.com/adafruit/circuitpython HEAD
+        git fetch --no-recurse-submodules --shallow-since="2021-07-01" origin $GITHUB_SHA
+        git repack -d
+        echo "::endgroup::"
+        CP_VERSION=$(tools/describe)
+        echo "$CP_VERSION"
+        echo "CP_VERSION=$CP_VERSION" >> $GITHUB_ENV
+        echo "cp-version=$CP_VERSION" >> $GITHUB_OUTPUT
+        make fetch-all-submodules
 
     - name: Run check
       run: make -C mpy-cross
