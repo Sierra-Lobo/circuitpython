@@ -318,7 +318,7 @@ STATIC mp_obj_t stream_readinto(size_t n_args, const mp_obj_t *args) {
 	}
 
     int error;
-    mp_uint_t out_sz = mp_stream_read_exactly(args[0], bufinfo.buf + offset, len, &error);
+    mp_uint_t out_sz = mp_stream_read_exactly(args[0], (uint8_t*)bufinfo.buf + offset, len, &error);
     if (error != 0) {
         if (mp_is_nonblocking_error(error)) {
             // pyserial readinto never returns None, just 0.
