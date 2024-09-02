@@ -45,9 +45,8 @@ jobs:
       run: make -C ports/unix VARIANT=coverage -j2
     - name: Run tests
       run: | 
-        cd ports/unix
-        make clean && make -j2 USER_C_MODULES=../../examples/usercmodule
-        ./micropython < usqlite_test
+        make -C ports/unix -j2 USER_C_MODULES=../../examples/usercmodule
+        ports/unix/micropython < usqlite_test
       working-directory: tests
     - name: Print failure info
       run: ./run-tests.py -j2 --print-failures
