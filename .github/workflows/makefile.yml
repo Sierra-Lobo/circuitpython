@@ -23,13 +23,8 @@ jobs:
 
     - name: Install dependencies
       uses: ./.github/actions/deps/submodules
-      with:
-        action: cache
-        version: true
     - name: Setup External 
       uses: ./.github/actions/deps/external
-      with:
-        action: cache
 
 
 
