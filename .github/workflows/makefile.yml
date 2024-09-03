@@ -22,7 +22,7 @@ jobs:
         #uses: ./.github/actions/mpy_cross
 
     - name: mpy-cross
-      uses: ./.github/workflows/build-mpy-cross.yml
+      uses: ./.github/actions/mpy_cross2/build-mpy-cross.yml
       with:
         cp-version: "8.2.x"
     - name: Run distcheck
