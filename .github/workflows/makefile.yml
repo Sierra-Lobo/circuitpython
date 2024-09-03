@@ -19,16 +19,12 @@ jobs:
 
     - name: Install dependencies
       uses: ./.github/actions/deps/submodules
-    - name: Setup External 
-      uses: ./.github/actions/deps/external
-    - name: Mpy Cross
-      uses: ./.github/actions/mpy_cross
-
-
-    - name: Set up submodules
-      uses: ./.github/actions/deps/submodules
       with:
         target: mpy-cross
+    - name: Setup External 
+      uses: ./.github/actions/deps/external
+
+
 
     - name: Install toolchain (aarch64)
       if: matrix.mpy-cross == 'static-aarch64'
@@ -55,6 +51,7 @@ jobs:
       run: make fetch-tags
     - name: Run sqlite
       run:  |
+        make -C mpy-cross
         make fetch-tags
         make -C ports/unix USER_C_MODULES=examples/usercmodule 
         ports/unix/micropython < ports/unix/usqlite_test.py
