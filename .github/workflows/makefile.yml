@@ -52,12 +52,10 @@ jobs:
       id: set-up-submodules
       uses: ./.github/actions/deps/submodules
       with:
-        action: cache
         version: true
     - name: Set up external
       uses: ./.github/actions/deps/external
       with:
-        action: cache
     - name: Set up mpy-cross
       uses: ./.github/actions/mpy_cross
       with:
