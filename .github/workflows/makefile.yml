@@ -55,10 +55,6 @@ jobs:
         version: true
     - name: Set up external
       uses: ./.github/actions/deps/external
-    - name: Set up mpy-cross
-      uses: ./.github/actions/mpy_cross
-      with:
-        download: false
 
 
 
