@@ -66,10 +66,10 @@ runs:
       run: rm submodule_status
       shell: bash
 
-        #- name: CircuitPython dependencies
-        #id: cp-deps
-        #run: python tools/ci_fetch_deps.py ${{ inputs.target || matrix.board || github.job }}
-        #shell: bash
+    - name: CircuitPython dependencies
+      id: cp-deps
+      run: python tools/ci_fetch_deps.py ${{ inputs.target || matrix.board || github.job }}
+      shell: bash
 
     - name: CircuitPython version
       id: cp-version
