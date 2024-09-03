@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      CP_VERSION: "8.2.x"
+      CP_VERSION: "8.2.0"
       MICROPY_CPYTHON3: python3.8
     steps:
     - uses: actions/checkout@v4
