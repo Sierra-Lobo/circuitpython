@@ -15,20 +15,14 @@ jobs:
       CP_VERSION: "8.2.x"
       MICROPY_CPYTHON3: python3.8
     steps:
-    - name: Set up repository
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
     - name: Install dependencies
       uses: ./.github/actions/deps/submodules
+      with:
+        target: mpy-cross
     - name: Setup External 
       uses: ./.github/actions/deps/external
-
-
-
-
-
-
-
 
 
 
@@ -57,8 +51,8 @@ jobs:
       #  run: make fetch-tags
     - name: Run sqlite
       run:  |
+        #make -C mpy-cross
         make fetch-tags
-        make -C mpy-cross
         make -C ports/unix USER_C_MODULES=examples/usercmodule 
         ports/unix/micropython < ports/unix/usqlite_test.py
-      
+
