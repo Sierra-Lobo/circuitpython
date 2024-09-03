@@ -95,7 +95,7 @@ def make_version_header(filename):
 #define MICROPY_BUILD_DATE "%s"
 #define MICROPY_VERSION_MAJOR (%s)
 #define MICROPY_VERSION_MINOR (%s)
-#define MICROPY_VERSION_MICRO (%s)
+#define MICROPY_VERSION_MICRO (10)
 #define MICROPY_VERSION_STRING "%s"
 #define MICROPY_FULL_VERSION_INFO "Adafruit CircuitPython " MICROPY_GIT_TAG " on " MICROPY_BUILD_DATE "; " MICROPY_HW_BOARD_NAME " with " MICROPY_HW_MCU_NAME
 """ % (
