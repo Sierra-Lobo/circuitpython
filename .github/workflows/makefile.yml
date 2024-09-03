@@ -15,46 +15,24 @@ jobs:
       CP_VERSION: "8.2.x"
       MICROPY_CPYTHON3: python3.8
     steps:
-#    - name: Set up repository
-#      uses: actions/checkout@v3
-#      with:
-#        submodules: false
-#        fetch-depth: 1
-#
-#    - name: Install dependencies
-#      uses: ./.github/actions/deps/submodules
-#      with:
-#        action: cache
-#        version: true
-#    - name: Setup External 
-#      uses: ./.github/actions/deps/external
-#      with:
-#        action: cache
-
-
-
-    - name: Dump GitHub context
-      run: echo "$GITHUB_CONTEXT"
-      env:
-        GITHUB_CONTEXT: ${{ toJson(github) }}
     - name: Set up repository
       uses: actions/checkout@v3
       with:
         submodules: false
         fetch-depth: 1
-    - name: Set up python
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.x
-    - name: Duplicate USB VID/PID check
-      run: python3 -u -m tools.ci_check_duplicate_usb_vid_pid
-    - name: Set up submodules
-      id: set-up-submodules
+
+    - name: Install dependencies
       uses: ./.github/actions/deps/submodules
       with:
+        action: cache
         version: true
-    - name: Set up external
+    - name: Setup External 
       uses: ./.github/actions/deps/external
+      with:
+        action: cache
+
+
+
 
 
 
