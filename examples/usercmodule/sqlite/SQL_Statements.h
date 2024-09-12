@@ -598,4 +598,21 @@
 		"DELETE FROM events WHERE id=?1;"
 
 
+	#define delete_table_range \
+		"DELETE FROM ?1 WHERE id>=?2 AND id<?3;"
+	
 
+#define delete_config_range\
+		"DELETE FROM configs WHERE id>=?1 AND id<?2;"
+#define delete_commands_range\
+		"DELETE FROM commands WHERE id>=?1 AND id<?2;"
+#define delete_soh_range\
+		"DELETE FROM soh WHERE id>=?1 AND id<?2;"
+#define delete_downlinks_range\
+		"DELETE FROM downlinks WHERE id>=?1 AND id<?2;"
+#define delete_uplinks_range\
+		"DELETE FROM uplinks WHERE id>=?1 AND id<?2;"
+#define delete_events_range\
+		"DELETE FROM events WHERE id>=?1 AND id<?2;"
+#define delete_payload_range\
+		"DELETE FROM payload WHERE id>=?1 AND id<?2;"

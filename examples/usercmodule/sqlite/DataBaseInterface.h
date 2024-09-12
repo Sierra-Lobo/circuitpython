@@ -270,7 +270,7 @@ int insertUplinkPacket(usqlite_connection_t* self,uint32_t txID, uint32_t packet
  *
  * @return status
  */
-int deleteEntry(usqlite_connection_t* self, uint32_t ID, const char* tableName);
+int deleteEntry(usqlite_connection_t* self, uint32_t ID, uint32_t end, const char* tableName);
 
 
 /**

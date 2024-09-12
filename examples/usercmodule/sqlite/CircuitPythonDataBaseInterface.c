@@ -371,8 +371,18 @@ mp_obj_t usqlite_deleteEntry(size_t n_args, const mp_obj_t* args)
 {
 	usqlite_connection_t* self = MP_OBJ_TO_PTR(args[0]);
 	uint32_t id = mp_obj_get_int(args[1]);
-	const char* tableName = mp_obj_str_get_str(args[2]);
-	return mp_obj_new_int(deleteEntry(self, id, tableName));
+	const char* tableName;
+	uint32_t end;
+	if (n_args > 3) {
+		 end = mp_obj_get_int(args[2]);
+		 tableName = mp_obj_str_get_str(args[3]);
+	}
+	else {
+		tableName = mp_obj_str_get_str(args[2]);
+		end = id;
+	}
+	id = handleNegativeIndex(self, tableName, id);
+	return mp_obj_new_int(deleteEntry(self, id, end, tableName));
 }
 
 

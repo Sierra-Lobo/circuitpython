@@ -351,16 +351,19 @@ int insertUplinkPacket(usqlite_connection_t* self,uint32_t txID, uint32_t packet
 }
 */
 
-int deleteEntry(usqlite_connection_t* self, uint32_t ID, const char* tableName) {
+int deleteEntry(usqlite_connection_t* self, uint32_t ID, uint32_t end,  const char* tableName) {
 	usqlite_cursor_t cursor;
-	if (strcmp(tableName, "configs") ==0) createStatement(self, &cursor, delete_config);
-	if (strcmp(tableName, "commands") ==0) createStatement(self, &cursor, delete_command);
-	if (strcmp(tableName, "soh") ==0) createStatement(self, &cursor, delete_soh_id);
-	if (strcmp(tableName, "downlinks") ==0) createStatement(self, &cursor, delete_downlink_id);
-	if (strcmp(tableName, "uplinks") ==0) createStatement(self, &cursor, delete_uplink_id);
-	if (strcmp(tableName, "events") ==0) createStatement(self, &cursor, delete_event);
-	if (strcmp(tableName, "payload") ==0) createStatement(self, &cursor, delete_payload);
+	if (strcmp(tableName, "configs") ==0) createStatement(self, &cursor, delete_config_range);
+	else if (strcmp(tableName, "commands") ==0) createStatement(self, &cursor, delete_commands_range);
+	else if (strcmp(tableName, "soh") ==0) createStatement(self, &cursor, delete_soh_range);
+	else if (strcmp(tableName, "downlinks") ==0) createStatement(self, &cursor, delete_downlinks_range);
+	else if (strcmp(tableName, "uplinks") ==0) createStatement(self, &cursor, delete_uplinks_range);
+	else if (strcmp(tableName, "events") ==0) createStatement(self, &cursor, delete_events_range);
+	else if (strcmp(tableName, "payload") ==0) createStatement(self, &cursor, delete_payload_range);
+	else return -1;	
+	
 	sqlite3_bind_int64(cursor.stmt, 1, ID);
+	sqlite3_bind_int64(cursor.stmt, 2, end);
 	int ec = stepExecute(&cursor);
 	cursorExit(&cursor);
 	return checkError(ec); 
