@@ -125,7 +125,7 @@ typedef struct _adcsSoh_obj_t {
 	ndarray_obj_t* angularVelocity;//[3];
 	ndarray_obj_t* quat;//[4];
 	float adcstime;
-	float timestamp;
+	mp_int_t timestamp;
 		
 } adcsSoh_obj_t;
 
@@ -144,7 +144,7 @@ STATIC mp_obj_t adcsSoh_make_new(const mp_obj_type_t *type, size_t n_args, size_
 		{MP_QSTR_angularVelocity, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 		{MP_QSTR_quat, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 		{MP_QSTR_adcstime, MP_ARG_OBJ, {.u_obj = mp_const_none}},
-		{MP_QSTR_timestamp, MP_ARG_OBJ, {.u_obj = mp_const_none}},
+		{MP_QSTR_timestamp, MP_ARG_INT, {.u_int = INT_ERROR}},
 	};
 	
 	mp_arg_val_t arg_vals[MP_ARRAY_SIZE(allowed_args)];
@@ -164,7 +164,7 @@ STATIC mp_obj_t adcsSoh_make_new(const mp_obj_type_t *type, size_t n_args, size_
 	self->angularVelocity = getNumpyArray(arg_vals[3].u_obj, 3);
 	self->quat = getNumpyArray(arg_vals[4].u_obj, 4);
 	self->adcstime = getFloat(arg_vals[5].u_obj);
-	self->timestamp = getFloat(arg_vals[6].u_obj);	
+	self->timestamp = arg_vals[6].u_int;	
 	//self->timestamp = foo();
 	return MP_OBJ_FROM_PTR(self);
 }
@@ -173,7 +173,7 @@ STATIC mp_obj_t adcsSoh_get_bytes(mp_obj_t self_in)
 {
 	adcsSoh_obj_t* self = MP_OBJ_TO_PTR(self_in);
 	
-	mp_obj_array_t* retval = array_new(BYTEARRAY_TYPECODE, 2* sizeof(uint8_t) + 12*sizeof(float));
+	mp_obj_array_t* retval = array_new(BYTEARRAY_TYPECODE, 2 + 11*sizeof(float)  + sizeof(int));
 	uint8_t* dest = retval->items;
 	//memcpy(retval->items, self, sizeof(adcsSoh_obj_t));
 	memcpy(dest++, &self->adcsstatus, 1);
@@ -186,7 +186,7 @@ STATIC mp_obj_t adcsSoh_get_bytes(mp_obj_t self_in)
 	dest += 4*sizeof(float);
 	memcpy(dest,&self->adcstime, sizeof(mp_float_t));
 	dest += sizeof(float);
-	memcpy(dest,&self->timestamp, sizeof(mp_float_t));
+	memcpy(dest,&self->timestamp, sizeof(int));
 
 
 	return MP_OBJ_FROM_PTR(retval);
@@ -221,8 +221,8 @@ STATIC mp_obj_t adcsSoh_from_bytes(mp_obj_t self_in, mp_obj_t new_data)
 	bufinfo.buf+=(4 * sizeof(float));
 	memcpy(&self->adcstime, bufinfo.buf, sizeof(float));
 	bufinfo.buf+=sizeof(float);
-	memcpy(&self->timestamp, bufinfo.buf, sizeof(float));
-	bufinfo.buf+=sizeof(float);
+	memcpy(&self->timestamp, bufinfo.buf, sizeof(int));
+	bufinfo.buf+=sizeof(int);
 
 	return MP_OBJ_FROM_PTR(self);	
 
@@ -245,7 +245,7 @@ STATIC mp_obj_t adcsSoh_adcstime(mp_obj_t self_in) {
 }
 STATIC mp_obj_t adcsSoh_timestamp(mp_obj_t self_in) {
     adcsSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    return mp_obj_new_float(self->timestamp);
+    return mp_obj_new_int(self->timestamp);
 }
 STATIC mp_obj_t adcsSoh_moment(mp_obj_t self_in) {
     adcsSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -348,7 +348,7 @@ STATIC void adcsSoh_print(const mp_print_t *print, mp_obj_t self_in, mp_print_ki
     mp_obj_print_helper(print, mp_obj_new_float(self->adcstime), PRINT_REPR);
 	
 	mp_print_str(print, ", timestamp: ");
-    mp_obj_print_helper(print, mp_obj_new_float(self->timestamp), PRINT_REPR);
+    mp_obj_print_helper(print, mp_obj_new_int(self->timestamp), PRINT_REPR);
 //    mp_print_str(print, ")");
 }
 
@@ -386,7 +386,7 @@ typedef struct _gpsSoh_obj_t {
 	mp_float_t lat;
 	mp_float_t lon;
 	mp_int_t quality;
-	mp_float_t timestamp;
+	mp_int_t timestamp;
 	mp_float_t speed_knots;
 } gpsSoh_obj_t;
 
@@ -402,7 +402,7 @@ STATIC mp_obj_t gpsSoh_make_new(const mp_obj_type_t *type, size_t n_args, size_t
 		{MP_QSTR_lat, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 		{MP_QSTR_lon, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 		{MP_QSTR_quality, MP_ARG_INT, {.u_int = INT_ERROR}},
-		{MP_QSTR_timestamp, MP_ARG_OBJ, {.u_obj = mp_const_none}},
+		{MP_QSTR_timestamp, MP_ARG_INT, {.u_int = INT_ERROR}},
 		{MP_QSTR_speed_knots, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 	};
 	
@@ -417,7 +417,7 @@ STATIC mp_obj_t gpsSoh_make_new(const mp_obj_type_t *type, size_t n_args, size_t
     self->lat = getFloat(arg_vals[ARG_lat].u_obj);
     self->lon = getFloat(arg_vals[ARG_lon].u_obj);
     self->quality = arg_vals[ARG_quality].u_int;
-    self->timestamp = getFloat(arg_vals[ARG_timestamp].u_obj);
+    self->timestamp = arg_vals[ARG_timestamp].u_int;
     self->speed_knots = getFloat(arg_vals[ARG_speed_knots].u_obj);
     return MP_OBJ_FROM_PTR(self);
 }
@@ -445,7 +445,7 @@ STATIC mp_obj_t gpsSoh_quality(mp_obj_t self_in) {
 }
 STATIC mp_obj_t gpsSoh_timestamp(mp_obj_t self_in) {
     gpsSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    return mp_obj_new_float(self->timestamp);
+    return mp_obj_new_int(self->timestamp);
 }
 STATIC mp_obj_t gpsSoh_speed_knots(mp_obj_t self_in) {
     gpsSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -512,7 +512,7 @@ STATIC mp_obj_t gpsSoh_from_bytes(mp_obj_t self_in, mp_obj_t new_data)
 	bufinfo.buf+=sizeof(float);
 	memcpy(&self->quality, bufinfo.buf, sizeof(mp_int_t));
 	bufinfo.buf+=sizeof(mp_int_t);
-	memcpy(&self->timestamp, bufinfo.buf, sizeof(float));
+	memcpy(&self->timestamp, bufinfo.buf, sizeof(int));
 	bufinfo.buf+=sizeof(float);
 	memcpy(&self->speed_knots, bufinfo.buf, sizeof(float));
 
@@ -608,7 +608,7 @@ STATIC void gpsSoh_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kin
     mp_obj_print_helper(print, mp_obj_new_float(self->gpstime), PRINT_REPR);
 	
 	mp_print_str(print, ", timestamp: ");
-    mp_obj_print_helper(print, mp_obj_new_float(self->timestamp), PRINT_REPR);
+    mp_obj_print_helper(print, mp_obj_new_int(self->timestamp), PRINT_REPR);
    // mp_print_str(print, ")");
 }
 
@@ -650,7 +650,7 @@ typedef struct _powerSoh_obj_t {
     mp_float_t systemV;
 	mp_float_t battV;
 	mp_float_t busI;
-	mp_float_t timestamp;
+	mp_int_t timestamp;
 
 	mp_float_t solar_charge_1;
 	mp_float_t solar_charge_2;
@@ -680,7 +680,7 @@ STATIC mp_obj_t powerSoh_make_new(const mp_obj_type_t *type, size_t n_args, size
 		{MP_QSTR_systemV, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 		{MP_QSTR_battV, MP_ARG_OBJ, {.u_obj =mp_const_none}},
 		{MP_QSTR_busI, MP_ARG_OBJ, {.u_obj = mp_const_none}},
-		{MP_QSTR_timestamp, MP_ARG_OBJ, {.u_obj = mp_const_none}},
+		{MP_QSTR_timestamp, MP_ARG_INT, {.u_int = INT_ERROR}},
 		{MP_QSTR_solar_charge_1, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 		{MP_QSTR_solar_charge_2, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 		{MP_QSTR_charge_current, MP_ARG_OBJ, {.u_obj = mp_const_none}},
@@ -708,7 +708,7 @@ STATIC mp_obj_t powerSoh_make_new(const mp_obj_type_t *type, size_t n_args, size
     self->systemV = getFloat(arg_vals[ARG_systemV].u_obj);
     self->battV = getFloat(arg_vals[ARG_battV].u_obj);
     self->busI = getFloat(arg_vals[ARG_busI].u_obj);
-    self->timestamp = getFloat(arg_vals[ARG_timestamp].u_obj);
+    self->timestamp = arg_vals[ARG_timestamp].u_int;
     
 	
     self->solar_charge_1  = getFloat(arg_vals[ARG_solar_charge_1].u_obj);
@@ -748,7 +748,7 @@ STATIC mp_obj_t powerSoh_busI(mp_obj_t self_in) {
 }
 STATIC mp_obj_t powerSoh_timestamp(mp_obj_t self_in) {
     powerSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    return mp_obj_new_float(self->timestamp);
+    return mp_obj_new_int(self->timestamp);
 }
 
 STATIC mp_obj_t powerSoh_solar_charge_1(mp_obj_t self_in) {
@@ -1006,7 +1006,7 @@ STATIC void powerSoh_print(const mp_print_t *print, mp_obj_t self_in, mp_print_k
 
 
 	mp_print_str(print, ", timestamp: ");
-    mp_obj_print_helper(print, mp_obj_new_float(self->timestamp), PRINT_REPR);
+    mp_obj_print_helper(print, mp_obj_new_int(self->timestamp), PRINT_REPR);
     //mp_print_str(print, ")");
 }
 
@@ -1051,7 +1051,7 @@ typedef struct _tempSoh_obj_t {
 	mp_float_t zMTQ;
 	mp_float_t bTempA;
 	mp_float_t bTempB;
-	mp_float_t timestamp;
+	mp_int_t timestamp;
 } tempSoh_obj_t;
 
 const mp_obj_type_t tempSoh_type;
@@ -1075,7 +1075,7 @@ STATIC mp_obj_t tempSoh_make_new(const mp_obj_type_t *type, size_t n_args, size_
 		{MP_QSTR_zMTQ, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 		{MP_QSTR_bTempA, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 		{MP_QSTR_bTempB, MP_ARG_OBJ, {.u_obj = mp_const_none}},
-		{MP_QSTR_timestamp, MP_ARG_OBJ, {.u_obj = mp_const_none}},
+		{MP_QSTR_timestamp, MP_ARG_INT, {.u_int = INT_ERROR}},
 	};
 	
 	mp_arg_val_t arg_vals[MP_ARRAY_SIZE(allowed_args)];
@@ -1099,7 +1099,7 @@ STATIC mp_obj_t tempSoh_make_new(const mp_obj_type_t *type, size_t n_args, size_
     self->zMTQ = getFloat(arg_vals[ARG_zMTQ].u_obj);
     self->bTempA = getFloat(arg_vals[ARG_bTempA].u_obj);
     self->bTempB = getFloat(arg_vals[ARG_bTempB].u_obj);
-    self->timestamp = getFloat(arg_vals[ARG_timestamp].u_obj);
+    self->timestamp = arg_vals[ARG_timestamp].u_int;
 	
 
 	
@@ -1166,7 +1166,7 @@ STATIC mp_obj_t tempSoh_bTempB(mp_obj_t self_in) {
 }
 STATIC mp_obj_t tempSoh_timestamp(mp_obj_t self_in) {
     tempSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    return mp_obj_new_float(self->timestamp);
+    return mp_obj_new_int(self->timestamp);
 }
 
 
@@ -1341,7 +1341,7 @@ STATIC void tempSoh_print(const mp_print_t *print, mp_obj_t self_in, mp_print_ki
 	
 	
 	mp_print_str(print, ", timestamp: ");
-    mp_obj_print_helper(print, mp_obj_new_float(self->timestamp), PRINT_REPR);
+    mp_obj_print_helper(print, mp_obj_new_int(self->timestamp), PRINT_REPR);
     //mp_print_str(print, ")");
 }
 
@@ -1386,7 +1386,7 @@ typedef struct _comSoh_obj_t {
 	mp_float_t sys_time;
 	mp_float_t energy;
 		
-	mp_float_t timestamp;
+	mp_int_t timestamp;
 } comSoh_obj_t;
 
 const mp_obj_type_t comSoh_type;
@@ -1406,7 +1406,7 @@ STATIC mp_obj_t comSoh_make_new(const mp_obj_type_t *type, size_t n_args, size_t
 		{MP_QSTR_signal_quality, MP_ARG_INT, {.u_int = INT_ERROR}},
 		{MP_QSTR_location, MP_ARG_OBJ, {.u_obj =mp_const_none}},
 		{MP_QSTR_sys_time, MP_ARG_OBJ, {.u_obj = mp_const_none}},
-		{MP_QSTR_timestamp, MP_ARG_OBJ, {.u_obj = mp_const_none}},
+		{MP_QSTR_timestamp, MP_ARG_INT, {.u_int = INT_ERROR}},
 	};
 	
 	mp_arg_val_t arg_vals[MP_ARRAY_SIZE(allowed_args)];
@@ -1427,7 +1427,7 @@ STATIC mp_obj_t comSoh_make_new(const mp_obj_type_t *type, size_t n_args, size_t
     
 	self->location= getNumpyArray(arg_vals[ARG_location].u_obj, 3);
     self->sys_time = getFloat(arg_vals[ARG_sys_time].u_obj);
-    self->timestamp = getFloat(arg_vals[ARG_timestamp].u_obj);
+    self->timestamp = arg_vals[ARG_timestamp].u_int;
 
 
 
@@ -1481,7 +1481,7 @@ STATIC mp_obj_t comSoh_energy(mp_obj_t self_in) {
 
 STATIC mp_obj_t comSoh_timestamp(mp_obj_t self_in) {
 	comSoh_obj_t* self = MP_OBJ_TO_PTR(self_in);
-	return mp_obj_new_float(self->timestamp);
+	return mp_obj_new_int(self->timestamp);
 }
 
 
@@ -1504,7 +1504,7 @@ STATIC mp_obj_t comSoh_get_bytes(mp_obj_t self_in)
 	dest+= 3 * sizeof(mp_float_t);
 	memcpy(dest, &self->sys_time, sizeof(mp_float_t));
 	dest+= sizeof(mp_float_t);
-	memcpy(dest, &self->timestamp, sizeof(mp_float_t));
+	memcpy(dest, &self->timestamp, sizeof(mp_int_t));
 
 
 	return MP_OBJ_FROM_PTR(retval);
@@ -1540,7 +1540,7 @@ STATIC mp_obj_t comSoh_from_bytes(mp_obj_t self_in, mp_obj_t new_data)
 	//memcpy(dest, bufinfo.buf, 2*sizeof(float));
 	memcpy(&self->sys_time, bufinfo.buf, sizeof(float));
 	bufinfo.buf+= sizeof(float);
-	memcpy(&self->timestamp, bufinfo.buf, sizeof(float));
+	memcpy(&self->timestamp, bufinfo.buf, sizeof(int));
 
 	return MP_OBJ_FROM_PTR(self);	
 
@@ -1673,7 +1673,7 @@ STATIC void comSoh_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kin
     mp_obj_print_helper(print, mp_obj_new_float(self->sys_time), PRINT_REPR);
 	
 	mp_print_str(print, ", timestamp: ");
-    mp_obj_print_helper(print, mp_obj_new_float(self->timestamp), PRINT_REPR);
+    mp_obj_print_helper(print, mp_obj_new_int(self->timestamp), PRINT_REPR);
     //mp_print_str(print, ")");
 }
 
