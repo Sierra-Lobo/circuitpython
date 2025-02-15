@@ -646,28 +646,22 @@ MP_DEFINE_CONST_OBJ_TYPE(
 //
 
 typedef struct _powerSoh_obj_t {
-    mp_obj_base_t base;
-    mp_float_t systemV;
-	mp_float_t battV;
-	mp_float_t busI;
-	mp_int_t timestamp;
+  mp_obj_base_t base;
+  mp_int_t timestamp;
+  mp_int_t solar_charge_1;
+  mp_int_t solar_charge_2;
+  mp_float_t charge_current;
+  mp_float_t battery_voltage;
+  mp_float_t bus_current;
+  mp_float_t v3v3_voltage;
+  mp_float_t v3v3_current;
+  mp_float_t payload_voltage;
+  mp_float_t payload_current;
+  mp_float_t rf_voltage;
+  mp_float_t rf_current;
+  mp_float_t solar1_voltage;
+  mp_float_t solar2_voltage;
 
-	mp_float_t solar_charge_1;
-	mp_float_t solar_charge_2;
-	mp_float_t charge_current;
-	mp_float_t charge_voltage;
-	mp_float_t battery_voltage;
-	mp_float_t battery_current;
-	mp_float_t bus_voltage;
-	mp_float_t bus_current;
-	mp_float_t v3v3_voltage;
-	mp_float_t v3v3_current;
-	mp_float_t payload_voltage;
-	mp_float_t payload_current;
-	mp_float_t rf_voltage;
-	mp_float_t rf_current;
-	mp_float_t solar1_voltage;
-	mp_float_t solar2_voltage;
 } powerSoh_obj_t;
 
 const mp_obj_type_t powerSoh_type;
@@ -675,19 +669,13 @@ const mp_obj_type_t powerSoh_type;
 STATIC mp_obj_t powerSoh_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     
 	
-	enum {ARG_systemV, ARG_battV, ARG_busI,  ARG_timestamp,ARG_solar_charge_1, ARG_solar_charge_2, ARG_charge_current, ARG_charge_voltage, ARG_battery_voltage, ARG_battery_current, ARG_bus_voltage, ARG_bus_current, ARG_v3v3_voltage, ARG_v3v3_current, ARG_payload_voltage, ARG_payload_current, ARG_rf_voltage, ARG_rf_current, ARG_solar1_voltage, ARG_solar2_voltage, NUM_ARGS};
+	enum {ARG_timestamp, ARG_solar_charge_1, ARG_solar_charge_2,  ARG_charge_current,ARG_battery_voltage, ARG_bus_current, ARG_v3v3_voltage, ARG_v3v3_current, ARG_payload_voltage, ARG_payload_current, ARG_rf_voltage, ARG_rf_current, ARG_solar1_voltage, ARG_solar2_voltage,  NUM_ARGS};
 	static const mp_arg_t allowed_args[] = {
-		{MP_QSTR_systemV, MP_ARG_OBJ, {.u_obj = mp_const_none}},
-		{MP_QSTR_battV, MP_ARG_OBJ, {.u_obj =mp_const_none}},
-		{MP_QSTR_busI, MP_ARG_OBJ, {.u_obj = mp_const_none}},
-		{MP_QSTR_timestamp, MP_ARG_INT, {.u_int = INT_ERROR}},
-		{MP_QSTR_solar_charge_1, MP_ARG_OBJ, {.u_obj = mp_const_none}},
-		{MP_QSTR_solar_charge_2, MP_ARG_OBJ, {.u_obj = mp_const_none}},
-		{MP_QSTR_charge_current, MP_ARG_OBJ, {.u_obj = mp_const_none}},
-		{MP_QSTR_charge_voltage, MP_ARG_OBJ, {.u_obj = mp_const_none}},
+		{MP_QSTR_timestamp, MP_ARG_INT, {.u_int = 0}},
+		{MP_QSTR_solar_charge_1, MP_ARG_INT, {.u_int =0}},
+		{MP_QSTR_solar_charge_2, MP_ARG_INT, {.u_int =0}},
+		{MP_QSTR_charge_current, MP_ARG_OBJ, {.u_obj= mp_const_none}},
 		{MP_QSTR_battery_voltage, MP_ARG_OBJ, {.u_obj = mp_const_none}},
-		{MP_QSTR_battery_current, MP_ARG_OBJ, {.u_obj = mp_const_none}},
-		{MP_QSTR_bus_voltage, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 		{MP_QSTR_bus_current, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 		{MP_QSTR_v3v3_voltage, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 		{MP_QSTR_v3v3_current, MP_ARG_OBJ, {.u_obj = mp_const_none}},
@@ -696,7 +684,7 @@ STATIC mp_obj_t powerSoh_make_new(const mp_obj_type_t *type, size_t n_args, size
 		{MP_QSTR_rf_voltage, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 		{MP_QSTR_rf_current, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 		{MP_QSTR_solar1_voltage, MP_ARG_OBJ, {.u_obj = mp_const_none}},
-		{MP_QSTR_solar2_voltage, MP_ARG_OBJ, {.u_obj = mp_const_none}},
+		{MP_QSTR_solar2_current, MP_ARG_OBJ, {.u_obj = mp_const_none}}
 	};
 	
 	mp_arg_val_t arg_vals[MP_ARRAY_SIZE(allowed_args)];
@@ -705,28 +693,29 @@ STATIC mp_obj_t powerSoh_make_new(const mp_obj_type_t *type, size_t n_args, size
 	
     powerSoh_obj_t *self = m_new_obj(powerSoh_obj_t);
     self->base.type = &powerSoh_type;
-    self->systemV = getFloat(arg_vals[ARG_systemV].u_obj);
-    self->battV = getFloat(arg_vals[ARG_battV].u_obj);
-    self->busI = getFloat(arg_vals[ARG_busI].u_obj);
     self->timestamp = arg_vals[ARG_timestamp].u_int;
+    self->solar_charge_1= arg_vals[ARG_solar_charge_1].u_int;
+    self->solar_charge_2= arg_vals[ARG_solar_charge_2].u_int;
+
+    self->charge_current = getFloat(arg_vals[ARG_charge_current].u_obj);
+    self->battery_voltage = getFloat(arg_vals[ARG_battery_voltage].u_obj);
+    self->bus_current= arg_vals[ARG_bus_current].u_int;
     
 	
-    self->solar_charge_1  = getFloat(arg_vals[ARG_solar_charge_1].u_obj);
-    self->solar_charge_2  = getFloat(arg_vals[ARG_solar_charge_2].u_obj);
-    self->charge_current  = getFloat(arg_vals[ARG_charge_current].u_obj);
-    self->charge_voltage  = getFloat(arg_vals[ARG_charge_voltage].u_obj);
-    self->battery_voltage = getFloat(arg_vals[ARG_battery_voltage].u_obj);
-    self->battery_current = getFloat(arg_vals[ARG_battery_current].u_obj);
-    self->bus_voltage     = getFloat(arg_vals[ARG_bus_voltage].u_obj);
-    self->bus_current     = getFloat(arg_vals[ARG_bus_current].u_obj);
-    self->v3v3_voltage    = getFloat(arg_vals[ARG_v3v3_voltage].u_obj);
-    self->v3v3_current    = getFloat(arg_vals[ARG_v3v3_current].u_obj);
-    self->payload_voltage = getFloat(arg_vals[ARG_payload_voltage].u_obj);
-    self->payload_current = getFloat(arg_vals[ARG_payload_current].u_obj);
-    self->rf_voltage      = getFloat(arg_vals[ARG_rf_voltage].u_obj);
-    self->rf_current      = getFloat(arg_vals[ARG_rf_current].u_obj);
-    self->solar1_voltage  = getFloat(arg_vals[ARG_solar1_voltage].u_obj);
-    self->solar2_voltage  = getFloat(arg_vals[ARG_solar2_voltage].u_obj);
+    self->v3v3_voltage = getFloat(arg_vals[ARG_v3v3_voltage].u_obj);
+    self->v3v3_current = getFloat(arg_vals[ARG_v3v3_current].u_obj);
+    
+    self->payload_voltage= getFloat(arg_vals[ARG_payload_voltage].u_obj);
+    self->payload_current= getFloat(arg_vals[ARG_payload_current].u_obj);
+    self->rf_voltage= getFloat(arg_vals[ARG_rf_voltage].u_obj);
+    self->rf_current= getFloat(arg_vals[ARG_rf_current].u_obj);
+    
+    
+    self->solar1_voltage= getFloat(arg_vals[ARG_solar1_voltage].u_obj);
+    self->solar2_voltage= getFloat(arg_vals[ARG_solar2_voltage].u_obj);
+
+
+    
 		
 	
 	
@@ -734,23 +723,10 @@ STATIC mp_obj_t powerSoh_make_new(const mp_obj_type_t *type, size_t n_args, size
 }
 //getter only visible to c interface, called by propertyclass_attr
 //if attr qstr == x's qster
-STATIC mp_obj_t powerSoh_systemV(mp_obj_t self_in) {
-    powerSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    return mp_obj_new_float(self->systemV);
-}
-STATIC mp_obj_t powerSoh_battV(mp_obj_t self_in) {
-    powerSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    return mp_obj_new_float(self->battV);
-}
-STATIC mp_obj_t powerSoh_busI(mp_obj_t self_in) {
-    powerSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    return mp_obj_new_float(self->busI);
-}
 STATIC mp_obj_t powerSoh_timestamp(mp_obj_t self_in) {
     powerSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
     return mp_obj_new_int(self->timestamp);
 }
-
 STATIC mp_obj_t powerSoh_solar_charge_1(mp_obj_t self_in) {
     powerSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
     return mp_obj_new_float(self->solar_charge_1);
@@ -763,27 +739,14 @@ STATIC mp_obj_t powerSoh_charge_current(mp_obj_t self_in) {
     powerSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
     return mp_obj_new_float(self->charge_current);
 }
-STATIC mp_obj_t powerSoh_charge_voltage(mp_obj_t self_in) {
+STATIC mp_obj_t powerSoh_battery_voltage(mp_obj_t self_in) {
     powerSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    return mp_obj_new_float(self->charge_voltage);
+    return mp_obj_new_int(self->battery_voltage);
 }
 
 STATIC mp_obj_t powerSoh_bus_current(mp_obj_t self_in) {
     powerSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
     return mp_obj_new_float(self->bus_current);
-}
-
-STATIC mp_obj_t powerSoh_battery_voltage(mp_obj_t self_in) {
-    powerSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    return mp_obj_new_float(self->battery_voltage);
-}
-STATIC mp_obj_t powerSoh_battery_current(mp_obj_t self_in) {
-    powerSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    return mp_obj_new_float(self->battery_current);
-}
-STATIC mp_obj_t powerSoh_bus_voltage(mp_obj_t self_in) {
-    powerSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    return mp_obj_new_float(self->bus_voltage);
 }
 STATIC mp_obj_t powerSoh_v3v3_voltage(mp_obj_t self_in) {
     powerSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -797,13 +760,15 @@ STATIC mp_obj_t powerSoh_payload_voltage(mp_obj_t self_in) {
     powerSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
     return mp_obj_new_float(self->payload_voltage);
 }
+
 STATIC mp_obj_t powerSoh_payload_current(mp_obj_t self_in) {
     powerSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
     return mp_obj_new_float(self->payload_current);
 }
+
 STATIC mp_obj_t powerSoh_rf_voltage(mp_obj_t self_in) {
     powerSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    return mp_obj_new_float(self->rf_current);
+    return mp_obj_new_float(self->rf_voltage);
 }
 STATIC mp_obj_t powerSoh_rf_current(mp_obj_t self_in) {
     powerSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -817,7 +782,6 @@ STATIC mp_obj_t powerSoh_solar2_voltage(mp_obj_t self_in) {
     powerSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
     return mp_obj_new_float(self->solar2_voltage);
 }
-
 
 
 STATIC mp_obj_t powerSoh_get_bytes(mp_obj_t self_in)
@@ -891,38 +855,20 @@ STATIC MP_DEFINE_CONST_DICT(powerSoh_locals_dict, powerSoh_locals_dict_table);
 //destination[0] is the output, must be mp_obj type
 STATIC void powerSoh_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination) {
     switch (attribute) {
-		case MP_QSTR_systemV:
-        destination[0] = powerSoh_systemV(self_in);
-    	break;
-		case MP_QSTR_battV:
-        destination[0] = powerSoh_battV(self_in);
-    	break;
-    	case MP_QSTR_busI:
-        destination[0] = powerSoh_busI(self_in);
-    	break;
 		case MP_QSTR_timestamp:
         destination[0] = powerSoh_timestamp(self_in);
     	break;
 		case MP_QSTR_solar_charge_1:
         destination[0] = powerSoh_solar_charge_1(self_in);
     	break;
-		case MP_QSTR_solar_charge_2:
+    	case MP_QSTR_solar_charge_2:
         destination[0] = powerSoh_solar_charge_2(self_in);
     	break;
 		case MP_QSTR_charge_current:
         destination[0] = powerSoh_charge_current(self_in);
     	break;
-		case MP_QSTR_charge_voltage:
-        destination[0] = powerSoh_charge_voltage(self_in);
-    	break;
 		case MP_QSTR_battery_voltage:
         destination[0] = powerSoh_battery_voltage(self_in);
-    	break;
-		case MP_QSTR_battery_current:
-        destination[0] = powerSoh_battery_current(self_in);
-    	break;
-		case MP_QSTR_bus_voltage:
-        destination[0] = powerSoh_bus_voltage(self_in);
     	break;
 		case MP_QSTR_bus_current:
         destination[0] = powerSoh_bus_current(self_in);
@@ -942,14 +888,17 @@ STATIC void powerSoh_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destinatio
 		case MP_QSTR_rf_voltage:
         destination[0] = powerSoh_rf_voltage(self_in);
     	break;
-		case MP_QSTR_rf_current:
+		case MP_QSTR_bus_rf_current:
         destination[0] = powerSoh_rf_current(self_in);
     	break;
 		case MP_QSTR_solar1_voltage:
         destination[0] = powerSoh_solar1_voltage(self_in);
     	break;
-		case MP_QSTR_solar2_voltage:
+		case MP_QSTR_solar2_current:
         destination[0] = powerSoh_solar2_voltage(self_in);
+    	break;
+		case MP_QSTR_battV:
+        destination[0] = powerSoh_battery_voltage(self_in);
     	break;
 	}
 }
@@ -959,55 +908,39 @@ STATIC void powerSoh_print(const mp_print_t *print, mp_obj_t self_in, mp_print_k
     (void)kind;
     powerSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
     //mp_print_str(print, "powerSoh(");
-	mp_print_str(print, " systemV: ");
-    mp_obj_print_helper(print, mp_obj_new_float(self->systemV), PRINT_REPR);
-	
-	
-	mp_print_str(print, ", battV: ");
-    mp_obj_print_helper(print, mp_obj_new_float(self->battV), PRINT_REPR);
-	
-	mp_print_str(print, ", busI: ");
-    mp_obj_print_helper(print,mp_obj_new_float(self->busI), PRINT_REPR);
-	
-
-
-	mp_print_str(print, ", solarCharge1: ");
-    mp_obj_print_helper(print,mp_obj_new_float(self->solar_charge_1), PRINT_REPR);
-	mp_print_str(print, ", solarCharge2: ");
-    mp_obj_print_helper(print,mp_obj_new_float(self->solar_charge_2), PRINT_REPR);
-	mp_print_str(print, ", chargeI: ");
-    mp_obj_print_helper(print,mp_obj_new_float(self->charge_current), PRINT_REPR);
-	mp_print_str(print, ", chargeV: ");
-    mp_obj_print_helper(print,mp_obj_new_float(self->charge_voltage), PRINT_REPR);
-	mp_print_str(print, ", batteryV: ");
-    mp_obj_print_helper(print,mp_obj_new_float(self->battery_voltage), PRINT_REPR);
-	mp_print_str(print, ", batteryI: ");
-    mp_obj_print_helper(print,mp_obj_new_float(self->battery_current), PRINT_REPR);
-	mp_print_str(print, ", busV: ");
-    mp_obj_print_helper(print,mp_obj_new_float(self->bus_voltage), PRINT_REPR);
-	mp_print_str(print, ", busI: ");
-    mp_obj_print_helper(print,mp_obj_new_float(self->bus_current), PRINT_REPR);
-	mp_print_str(print, ", v3v3V: ");
-    mp_obj_print_helper(print,mp_obj_new_float(self->v3v3_voltage), PRINT_REPR);
-	mp_print_str(print, ", v3v3I: ");
-    mp_obj_print_helper(print,mp_obj_new_float(self->v3v3_current), PRINT_REPR);
-	mp_print_str(print, ", payV: ");
-    mp_obj_print_helper(print,mp_obj_new_float(self->payload_voltage), PRINT_REPR);
-	mp_print_str(print, ", payI: ");
-    mp_obj_print_helper(print,mp_obj_new_float(self->payload_current), PRINT_REPR);
-	mp_print_str(print, ", rfV: ");
-    mp_obj_print_helper(print,mp_obj_new_float(self->rf_voltage), PRINT_REPR);
-	mp_print_str(print, ", rfI: ");
-    mp_obj_print_helper(print,mp_obj_new_float(self->rf_current), PRINT_REPR);
-	mp_print_str(print, ", solar1V: ");
-    mp_obj_print_helper(print,mp_obj_new_float(self->solar1_voltage), PRINT_REPR);
-	mp_print_str(print, ", solar2V: ");
-    mp_obj_print_helper(print,mp_obj_new_float(self->solar2_voltage), PRINT_REPR);
-
-
-	mp_print_str(print, ", timestamp: ");
+	mp_print_str(print, " timestamp: ");
     mp_obj_print_helper(print, mp_obj_new_int(self->timestamp), PRINT_REPR);
-    //mp_print_str(print, ")");
+	
+	
+	mp_print_str(print, ", solar_charge_1: ");
+    mp_obj_print_helper(print, mp_obj_new_int(self->solar_charge_1), PRINT_REPR);
+	mp_print_str(print, ", solar_charge_2: ");
+    mp_obj_print_helper(print, mp_obj_new_int(self->solar_charge_2), PRINT_REPR);
+	
+	mp_print_str(print, ", charge_current: ");
+    mp_obj_print_helper(print,mp_obj_new_float(self->charge_current), PRINT_REPR);
+
+	mp_print_str(print, ", battery_voltage: ");
+    mp_obj_print_helper(print,mp_obj_new_float(self->battery_voltage), PRINT_REPR);
+	mp_print_str(print, ", bus_current: ");
+    mp_obj_print_helper(print,mp_obj_new_float(self->bus_current), PRINT_REPR);
+	mp_print_str(print, ", v3v3_voltage: ");
+    mp_obj_print_helper(print,mp_obj_new_float(self->v3v3_voltage), PRINT_REPR);
+	mp_print_str(print, ", v3v3_current: ");
+    mp_obj_print_helper(print,mp_obj_new_float(self->v3v3_current), PRINT_REPR);
+	mp_print_str(print, ", payload_voltage: ");
+    mp_obj_print_helper(print,mp_obj_new_float(self->payload_voltage), PRINT_REPR);
+	mp_print_str(print, ", payload_current: ");
+    mp_obj_print_helper(print,mp_obj_new_float(self->payload_current), PRINT_REPR);
+	mp_print_str(print, ", rf_voltage: ");
+    mp_obj_print_helper(print,mp_obj_new_float(self->rf_voltage), PRINT_REPR);
+	mp_print_str(print, ", rf_current: ");
+    mp_obj_print_helper(print,mp_obj_new_float(self->rf_current), PRINT_REPR);
+	mp_print_str(print, ", solar1_voltage: ");
+    mp_obj_print_helper(print,mp_obj_new_float(self->solar1_voltage), PRINT_REPR);
+	mp_print_str(print, ", solar2_voltage: ");
+    mp_obj_print_helper(print,mp_obj_new_float(self->solar2_voltage), PRINT_REPR);
+	 //mp_print_str(print, ")");
 }
 
 //register python object visible to interpreter
