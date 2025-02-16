@@ -699,7 +699,7 @@ STATIC mp_obj_t powerSoh_make_new(const mp_obj_type_t *type, size_t n_args, size
 
     self->charge_current = getFloat(arg_vals[ARG_charge_current].u_obj);
     self->battery_voltage = getFloat(arg_vals[ARG_battery_voltage].u_obj);
-    self->bus_current= arg_vals[ARG_bus_current].u_int;
+    self->bus_current= getFloat(arg_vals[ARG_bus_current].u_obj);
     
 	
     self->v3v3_voltage = getFloat(arg_vals[ARG_v3v3_voltage].u_obj);
